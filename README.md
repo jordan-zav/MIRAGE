@@ -22,7 +22,7 @@ Input requirement: MIRAGE accepts single-band GeoTIFF files, RGB GeoTIFF files (
 ## Installation
 
 ```bash
-git clone https://github.com/tu_usuario/MIRAGE.git
+git clone https://github.com/jordan-zav/MIRAGE.git
 cd MIRAGE
 python -m venv venv
 venv\Scripts\activate
