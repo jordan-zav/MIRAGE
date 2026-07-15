@@ -23,7 +23,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['torch', 'tensorflow', 'tensorboard', 'keras', 'cv2', 'googleapiclient', 'google', 'IPython', 'notebook', 'PySide6', 'PyQt5', 'matplotlib'],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
@@ -33,7 +33,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='gui',
+    name='MIRAGE',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -52,5 +52,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='gui',
+    name='MIRAGE',
 )
