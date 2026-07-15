@@ -39,6 +39,7 @@ def _summarize_lineaments(shapefile_path):
             "max_length": 0.0,
             "min_length": 0.0,
             "units": "N/A",
+            "crs": "Sin definir / No CRS",
         }
 
     try:
@@ -53,6 +54,15 @@ def _summarize_lineaments(shapefile_path):
         lengths = gdf.geometry.length.astype(float)
         units = str(gdf.crs.axis_info[0].unit_name) if gdf.crs and hasattr(gdf.crs, 'axis_info') and gdf.crs.axis_info else "CRS map units"
 
+    crs_str = "Sin definir / No CRS"
+    if gdf.crs:
+        try:
+            crs_name = gdf.crs.name
+            crs_epsg = gdf.crs.to_epsg()
+            crs_str = f"{crs_name} (EPSG:{crs_epsg})" if crs_epsg else str(crs_name)
+        except Exception:
+            crs_str = str(gdf.crs)
+
     return {
         "count": int(len(gdf)),
         "total_length": float(lengths.sum()),
@@ -60,6 +70,7 @@ def _summarize_lineaments(shapefile_path):
         "max_length": float(lengths.max()),
         "min_length": float(lengths.min()),
         "units": units,
+        "crs": crs_str,
     }
 
 
@@ -71,6 +82,7 @@ def _write_markdown_report(report_path, summary):
 *   **Carpeta de Salida:** `{summary["output_dir"]}`
 *   **Archivo Shapefile:** `{summary["outputs"]["lineaments"]}`
 *   **Archivo GeoPackage:** `{summary["outputs"]["geopackage"]}`
+*   **Sistema de Referencia (CRS) de la fuente:** `{summary["lineaments"].get("crs", "N/A")}`
 
 ## Parámetros Utilizados
 *   **Modo Interpretativo:** `{summary["parameters"]["extraction_mode"]}`
@@ -87,6 +99,9 @@ def _write_markdown_report(report_path, summary):
 *   **Paso de Curvatura (Stride):** `{summary["parameters"].get("geophys_stride", 1)}`
 """
 
+    if "rgb_conversion" in summary["parameters"]:
+        md_content += f"""*   **Método de Conversión RGB:** `{summary["parameters"]["rgb_conversion"]}`\n"""
+
     md_content += f"""
 ## Resumen de Lineamientos
 *   **Cantidad Detectada:** `{summary["lineaments"]["count"]}`
@@ -95,6 +110,10 @@ def _write_markdown_report(report_path, summary):
 *   **Longitud Promedio:** `{summary["lineaments"]["mean_length"]:.2f}`
 *   **Longitud Máxima:** `{summary["lineaments"]["max_length"]:.2f}`
 *   **Longitud Mínima:** `{summary["lineaments"]["min_length"]:.2f}`
+
+> [!NOTE]
+> **Control de CRS y Datum en Arqueología y Geofísica:**
+> La precisión espacial centimétrica/métrica es crítica para correlacionar lineamientos con excavaciones y muros. Asegúrate de que el CRS del ráster de entrada coincida con el CRS maestro del proyecto. Si trabajas en Perú y utilizas cartografía antigua en PSAD56, realiza la transformación al marco moderno (WGS84 / SIRGAS UTM) para evitar desfases de posicionamiento.
 """
     report_path.write_text(md_content, encoding="utf-8")
 
@@ -113,6 +132,7 @@ def run_extraction_job(
     geophys_filters=None,
     geophys_extract_type="trough",
     geophys_stride=1,
+    rgb_conversion="auto",
 ):
     validate_rgb_geotiff(geotiff)
     out_dir = Path(out_dir)
@@ -132,6 +152,7 @@ def run_extraction_job(
         geophys_filters=geophys_filters,
         geophys_extract_type=geophys_extract_type,
         geophys_stride=geophys_stride,
+        rgb_conversion=rgb_conversion,
     )
 
     summary = {
@@ -152,6 +173,7 @@ def run_extraction_job(
             "geophys_filters": geophys_filters,
             "geophys_extract_type": geophys_extract_type,
             "geophys_stride": geophys_stride,
+            "rgb_conversion": rgb_conversion,
         },
         "lineaments": _summarize_lineaments(shapefile_path),
     }

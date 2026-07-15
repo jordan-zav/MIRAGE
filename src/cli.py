@@ -60,6 +60,12 @@ def _build_parser():
         default=1,
         help="Grid stride / scale for local quadratic curvature analysis (1=3x3, 2=5x5, etc.)",
     )
+    parser.add_argument(
+        "--rgb-conversion",
+        choices=("auto", "average", "gli", "vari", "luma"),
+        default="auto",
+        help="RGB-to-grayscale conversion method for multiband images (auto, average, gli, vari, luma)",
+    )
     return parser
 
 
@@ -168,6 +174,7 @@ def main(argv=None):
             geophys_filters=args.gp_filters if resolved_mode_val == "geophysics" else None,
             geophys_extract_type=args.gp_type if resolved_mode_val == "geophysics" else "trough",
             geophys_stride=args.gp_stride if resolved_mode_val == "geophysics" else 1,
+            rgb_conversion=args.rgb_conversion,
         )
         summary["profile"] = profile
         summary["compute_mode"] = args.compute

@@ -773,6 +773,7 @@ def recommend_settings(image, pixel_size, compute_mode="auto", source_hint=None)
         "metrics": {key: round(value, 4) for key, value in metrics.items()},
         "mode_scores": {key: round(value, 3) for key, value in mode_scores.items()},
         "params": params,
+        "rgb_conversion": "auto",
     }
 
 

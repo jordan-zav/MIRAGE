@@ -208,21 +208,35 @@ def prune_skeleton(skel, min_branch_length=10):
     return _remove_small_components(skel, min_branch_length)
 
 
-def _read_grayscale_image(src):
+def _read_grayscale_image(src, rgb_conversion="average"):
     count = int(src.count)
     if count == 1:
         return src.read(1).astype(np.float32)
-    if count == 3:
+    if count in (3, 4):
+        if count == 4:
+            interps = tuple(src.colorinterp or ())
+            if not (len(interps) >= 4 and interps[3] == ColorInterp.alpha):
+                raise ValueError(
+                    "MIRAGE accepts single-band, RGB GeoTIFF (3 bands), or RGBA where band 4 is alpha."
+                )
+        
         data = src.read(indexes=[1, 2, 3]).astype(np.float32)
-        return np.mean(data, axis=0)
-    if count == 4:
-        interps = tuple(src.colorinterp or ())
-        if len(interps) >= 4 and interps[3] == ColorInterp.alpha:
-            data = src.read(indexes=[1, 2, 3]).astype(np.float32)
+        r, g, b = data[0], data[1], data[2]
+        
+        mode = str(rgb_conversion).lower().strip()
+        if mode == "gli":
+            denom = 2.0 * g + r + b
+            gli = np.where(denom > 1e-6, (2.0 * g - r - b) / denom, 0.0)
+            return gli
+        elif mode == "vari":
+            denom = g + r - b
+            vari = np.where(denom > 1e-6, (g - r) / denom, 0.0)
+            return vari
+        elif mode == "luma":
+            return 0.299 * r + 0.587 * g + 0.114 * b
+        else:
             return np.mean(data, axis=0)
-        raise ValueError(
-            "MIRAGE accepts single-band, RGB GeoTIFF (3 bands), or RGBA where band 4 is alpha."
-        )
+            
     raise ValueError(
         f"MIRAGE accepts single-band, RGB GeoTIFF (3 bands), or RGBA where band 4 is alpha. "
         f"Detected {count} band(s)."
@@ -417,12 +431,14 @@ def _is_signature_candidate(coords, lthr, extraction_mode):
     mode = _mode_config(extraction_mode)
     if metrics["pixel_length"] < max(2.0, float(lthr)):
         return False
-    if metrics["chord"] < max(6.0, float(lthr) * mode["min_chord_factor"]):
-        return False
     if extraction_mode == "geometry":
+        # Para arqueologia/geometria, permitimos lazos y estructuras circulares cerradas
+        # que tienen un largo de cuerda pequeno. Solo exigimos el umbral de cuerda en la
+        # rama recta (elongated_branch), no en la rama curva.
         elongated_branch = (
             metrics["straightness"] >= mode["min_straightness"]
             and metrics["elongation"] >= mode["min_elongation"]
+            and metrics["chord"] >= max(6.0, float(lthr) * mode["min_chord_factor"])
         )
         curved_branch = (
             metrics["path_ratio"] >= mode["min_path_ratio"]
@@ -434,6 +450,8 @@ def _is_signature_candidate(coords, lthr, extraction_mode):
         if not (elongated_branch or curved_branch):
             return False
     else:
+        if metrics["chord"] < max(6.0, float(lthr) * mode["min_chord_factor"]):
+            return False
         if metrics["straightness"] < mode["min_straightness"]:
             return False
         if metrics["elongation"] < mode["min_elongation"]:
@@ -717,6 +735,7 @@ def lineament_extraction_multiband(
     geophys_filters=None,
     geophys_extract_type="trough",
     geophys_stride=1,
+    rgb_conversion="auto",
 ):
     """
     Extract lineaments from grayscale or multiband rasters.
@@ -731,8 +750,13 @@ def lineament_extraction_multiband(
     import os
     from concurrent.futures import ProcessPoolExecutor
 
+    # Resolve rgb_conversion: if auto, use GLI for geometry mode, average for others.
+    resolved_conversion = str(rgb_conversion).lower().strip()
+    if resolved_conversion == "auto":
+        resolved_conversion = "gli" if extraction_mode == "geometry" else "average"
+
     with rasterio.open(geotiff) as src:
-        image = _read_grayscale_image(src)
+        image = _read_grayscale_image(src, rgb_conversion=resolved_conversion)
         transform = src.transform
         crs = src.crs
         pixel_size = max(abs(src.transform.a), abs(src.transform.e))
