@@ -1,6 +1,5 @@
-# MIRAGE
+## MIRAGE
 
-**MIRAGE**  
 **M**orphological **I**dentification and **R**emote **A**nalysis for **G**eospatial **E**xtraction
 
 MIRAGE is a Python framework for automated extraction of geospatial signatures in geoscience and archaeology.
