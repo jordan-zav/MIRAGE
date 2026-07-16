@@ -1,3 +1,0 @@
-Notification date: 2026-07-15T15:26:17-05:00
-To use the OpenAlex literature search skill, please check the terms of service at https://developers.openalex.org/
-Always check the license of the papers retrieved by this skill for any restrictions on usage, modification, or sharing.
