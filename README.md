@@ -41,3 +41,7 @@ python src/cli.py -i input.tif -o output_folder --profile "Structural continuity
 ```
 
 The CLI writes `lineaments.shp`, `lineaments.gpkg`, and a `mirage_report.json` file in the output folder.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See [LICENSE.txt](LICENSE.txt).
