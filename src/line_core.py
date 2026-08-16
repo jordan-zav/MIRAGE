@@ -6,7 +6,7 @@ import rasterio
 from rasterio.enums import ColorInterp
 
 from scipy.spatial import cKDTree
-from scipy.ndimage import gaussian_filter1d, gaussian_filter, convolve
+from scipy.ndimage import gaussian_filter, convolve
 from shapely.geometry import LineString
 from skimage import feature, filters, measure, morphology
 

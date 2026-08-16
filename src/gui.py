@@ -990,7 +990,7 @@ class LineamentGUI:
                 self.last_lineaments_path = last_summary["outputs"]["lineaments"]
                 self.root.after(0, lambda: self._on_extraction_success(out_dir, use_subdirs, infiles))
             except Exception as exc:
-                self.root.after(0, lambda: self._on_extraction_failure(exc))
+                self.root.after(0, lambda error=exc: self._on_extraction_failure(error))
 
         threading.Thread(target=target, daemon=True).start()
 

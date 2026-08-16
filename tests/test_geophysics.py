@@ -16,7 +16,6 @@ from line_core import (
     compute_potential_field_filter,
     fit_quadratic_derivatives,
     detect_curvature_features,
-    lineament_extraction_multiband
 )
 from ai.parameter_advisor import recommend_settings
 from pipeline import run_extraction_job
