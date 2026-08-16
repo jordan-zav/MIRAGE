@@ -1,5 +1,6 @@
 # Core numerical stack
 numpy==1.26.4
+pandas==2.3.3
 scipy==1.11.4
 
 # Image processing
