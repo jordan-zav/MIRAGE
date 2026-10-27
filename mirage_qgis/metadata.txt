@@ -2,7 +2,7 @@
 name=MIRAGE
 description=Extract and review geological and archaeological raster signatures in QGIS
 about=MIRAGE shares its numerical core with the Python API and CLI. Includes a dockable panel, Processing extraction and heuristic parameter recommendations, native GDAL/OGR I/O and GeoPackage results. Extracted morphology requires independent interpretation.
-version=1.1.0
+version=1.2.0
 qgisMinimumVersion=3.40
 qgisMaximumVersion=3.99
 author=Jordan Zavaleta (GisGeo Dev)

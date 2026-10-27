@@ -19,17 +19,17 @@ and Processing tools, backed by one shared Python core.
 
 ## Start in QGIS
 
-1. Download MIRAGE_QGIS_1.1.0.zip from the [latest release](https://github.com/jordan-zav/MIRAGE/releases/latest).
+1. Download MIRAGE_QGIS_1.2.0.zip from the [latest release](https://github.com/jordan-zav/MIRAGE/releases/latest).
 2. Open Plugins → Manage and Install Plugins → Install from ZIP. Select the full ZIP.
 3. Enable MIRAGE and open Raster → MIRAGE.
 4. If the panel reports missing image libraries, install them with its button.
    This needs internet and uses a separate directory, retaining QGIS' native libraries.
-5. Load a GDAL file raster, select your interpretation goal and a starting profile.
-6. Optionally request heuristic recommendations, then inspect Advanced parameters.
+5. Load a GDAL file raster, declare the input type and physical scale.
+6. Pan over a valid area, click Compare 3 previews and explicitly choose a candidate.
 7. Select a new or empty output folder and extract. The GeoPackage loads into QGIS.
 8. Compare the result with the input raster, maps, imagery and independent evidence.
 
-This is the **first experimental QGIS edition**, tested on QGIS 3.44.12 for
+This is the **experimental QGIS edition**, tested on QGIS 3.44.12 for
 Windows/Python 3.12. It is distributed as an installable GitHub ZIP; a listing in
 the official QGIS Plugin Repository is not implied. Other compatible QGIS 3.40+
 environments still need platform-specific checking.
@@ -56,8 +56,9 @@ The MIRAGE provider registers:
 
 - mirage:extract_signatures — raster extraction, GeoPackage, Shapefile and reports.
 - mirage:recommend_parameters — a sampled heuristic recommendation written to JSON.
+- mirage:preview_candidates — three variants on the same native-resolution window.
 
-Both appear in Processing and can be used in batches or models. Give every
+All three appear in Processing and can be used in batches or models. Give every
 extraction its own output folder. The QGIS core runs serially inside a task;
 cancellation is checked between numerical stages, not inside every library call.
 
@@ -116,7 +117,7 @@ python src/gui.py
 The CLI accepts multiple inputs, explicit thresholds, RGB conversion and an
 optional heuristic recommendation. The QGIS panel is now the primary interface.
 The Windows executable in [release v1.0.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.0.0)
-is a legacy standalone build and does not contain the 1.1.0 changes.
+is a legacy standalone build and does not contain the 1.2.0 changes.
 
 ## Development and verification
 
@@ -124,7 +125,7 @@ is a legacy standalone build and does not contain the 1.1.0 changes.
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
 python -m ruff check src tests mirage_qgis scripts
-python scripts/package_qgis.py --output /path/to/new/MIRAGE_QGIS_1.1.0.zip
+python scripts/package_qgis.py --output /path/to/new/MIRAGE_QGIS_1.2.0.zip
 ~~~
 
 The packager uses an explicit allowlist, includes the licence and SHA-256
@@ -134,10 +135,10 @@ credentials, environments, tests and previous results.
 QGIS smoke checks use its own Python launcher with QT_QPA_PLATFORM=offscreen:
 
 ~~~text
-python-qgis-ltr tests/qgis_smoke.py /path/to/MIRAGE_QGIS_1.1.0.zip --workspace /path/to/new/checks
+python-qgis-ltr tests/qgis_smoke.py /path/to/MIRAGE_QGIS_1.2.0.zip --workspace /path/to/new/checks
 ~~~
 
-[Validation record](docs/VALIDATION_1_1_0.md) · [Workflow](docs/workflow.md) ·
+[Validation record](docs/VALIDATION_1_2_0.md) · [Workflow](docs/workflow.md) ·
 [Parameters](docs/parameters.md) · [Historical technical paper](docs/informe_mirage_paper.md).
 
 Software and synthetic checks do not establish geological validity. Field-scale
@@ -160,3 +161,20 @@ require their own documented evaluation.
 
 [GNU GPL v3](LICENSE.txt). Jordan Zavaleta — [GisGeo Dev](https://gisgeo.dev) ·
 [jordanzav@gisgeo.dev](mailto:jordanzav@gisgeo.dev).
+
+
+## Adaptive configuration in metres (1.2)
+
+1. Declare the actual input: terrain, magnetic field, gravity, optical imagery or unknown. Texture does not establish origin.
+2. Set objective, minimum length, smoothing radius, linking gap and simplification in metres. This workflow requires a projected metre CRS and square orthogonal pixels. Geophysics additionally needs a north-up grid and a gap-free window.
+3. Pan the map centre over the area to inspect and click Compare 3 previews. Three sensitivities process the same native 256-by-256 cells. A reduced Recommend sample never changes the resolution used to convert metres to extraction pixels.
+4. Compare overlays and parameters, then choose Use balanced, conservative or detail. No winner is inferred from trace count. The displayed directory retains the crop, PNGs, GeoPackages, candidate plan and selected recipe.
+5. Choose a fresh folder for full extraction. Its JSON report embeds the recipe. Changing raster/settings invalidates selection. Crop boundaries can affect results; a crop and regional extraction are not guaranteed to match exactly.
+
+Use manual advanced parameters retains the expert pixel-based workflow without a recipe. Recommend prepares candidates only; it does not infer archaeology or override the declared input. Unknown input uses generic edge extraction. Preserve geometry requires explicit user selection.
+
+Processing: mirage:recommend_parameters creates a plan, mirage:preview_candidates compares a window (optional CENTER in source CRS, WINDOW_PIXELS 32 to 512), and mirage:extract_signatures accepts RECIPE pointing to a selected JSON. Shared API functions are recommend_adaptive, select_recipe and validate_recipe; the CLI accepts --recipe path.json. Recipes bind to source path, size and modification time, and do not transfer automatically to another file. Extraction reports also calculate the input SHA-256.
+
+The physical minimum length is checked again on final geometry after simplification and mask clipping. Resolution may prevent representing lengths below two pixels. Variants change smoothing and threshold while retaining minimum length, linking gap, simplification and objective. PNGs show the original raster; TDR traces derive from the transformed field. Circular morphology and higher trace counts do not establish origin or accuracy.
+
+RADI is rounded to native pixels. Tonal edges retain a minimum sigma of 1.2 pixels and geophysics 0.5; requesting zero smoothing does not disable this numerical filter. The JSON records the parameter conversion.

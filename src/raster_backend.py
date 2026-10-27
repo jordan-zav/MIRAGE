@@ -28,6 +28,52 @@ class Transform(NamedTuple):
     f: float
 
 
+class NativeCRS:
+    """Use the host OSR context in QGIS; do not mix PROJ CRS contexts across tasks."""
+    def __init__(self, value):
+        from osgeo import osr
+        self.reference = osr.SpatialReference()
+        text = value.to_wkt() if hasattr(value, 'to_wkt') else str(value)
+        if self.reference.SetFromUserInput(text) != 0:
+            raise ValueError('Invalid source CRS.')
+        self.reference.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
+    @property
+    def is_projected(self):
+        return bool(self.reference.IsProjected())
+
+    @property
+    def is_geographic(self):
+        return bool(self.reference.IsGeographic())
+
+    @property
+    def axis_info(self):
+        from types import SimpleNamespace
+        factor = self.reference.GetLinearUnits() if self.is_projected else self.reference.GetAngularUnits()
+        return [SimpleNamespace(unit_conversion_factor=factor) for _ in range(2)]
+
+    def to_wkt(self):
+        return self.reference.ExportToWkt()
+
+    def get_geod(self):
+        from pyproj import Geod
+        return Geod(a=self.reference.GetSemiMajor(), b=self.reference.GetSemiMinor())
+
+    def __str__(self):
+        name, code = self.reference.GetAuthorityName(None), self.reference.GetAuthorityCode(None)
+        return f'{name}:{code}' if name and code else self.to_wkt()
+
+
+def reference_crs(value):
+    if isinstance(value, NativeCRS):
+        return value
+    try:
+        from osgeo import osr  # noqa: F401
+    except ImportError:
+        return CRS.from_user_input(value)
+    return NativeCRS(value)
+
+
 class GDALSource:
     def __init__(self, path):
         from osgeo import gdal
@@ -41,7 +87,7 @@ class GDALSource:
         gt = self.dataset.GetGeoTransform()
         self.transform = Transform(gt[1], gt[2], gt[0], gt[4], gt[5], gt[3])
         wkt = self.dataset.GetProjection()
-        self.crs = CRS.from_wkt(wkt) if wkt else None
+        self.crs = reference_crs(wkt) if wkt else None
         self.colorinterp = tuple(self.dataset.GetRasterBand(i).GetColorInterpretation()
                                  for i in range(1, self.count+1))
 
@@ -92,7 +138,7 @@ def inspect_raster(path, max_pixels=16_000_000):
 
 
 def validate_geophysics_grid(source):
-    crs = CRS.from_user_input(source.crs)
+    crs = reference_crs(source.crs)
     t = source.transform
     if not crs.is_projected:
         raise ValueError("Geophysics requires a projected metric CRS; reproject with GDAL Warp first.")
@@ -167,7 +213,7 @@ def write_vectors(out_base, records, lines, crs):
         frame.to_file(str(out_base)+'.gpkg', layer='lineaments', driver='GPKG')
         return
     reference = osr.SpatialReference()
-    reference.ImportFromWkt(CRS.from_user_input(crs).to_wkt())
+    reference.ImportFromWkt(reference_crs(crs).to_wkt())
     reference.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
     for driver, suffix in [('ESRI Shapefile', '.shp'), ('GPKG', '.gpkg')]:
         dataset = ogr.GetDriverByName(driver).CreateDataSource(str(out_base)+suffix)
@@ -204,7 +250,7 @@ def summarize_vectors(path):
 
         dataset = ogr.Open(str(path))
         layer = dataset.GetLayer(0)
-        crs = CRS.from_wkt(layer.GetSpatialRef().ExportToWkt())
+        crs = reference_crs(layer.GetSpatialRef().ExportToWkt())
         lines = [wkb.loads(bytes(feature.GetGeometryRef().ExportToWkb())) for feature in layer]
     if not lines:
         return {"count": 0, "total_length": 0, "mean_length": 0, "min_length": 0,

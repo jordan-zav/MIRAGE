@@ -78,8 +78,18 @@ def run_extraction_job(
     extraction_mode="signature", geophys_filters=None,
     geophys_extract_type="trough", geophys_stride=1, rgb_conversion="auto",
     workers=1, max_pixels=16_000_000, profile=None, compute_mode=None,
-    cancelled=None,
+    cancelled=None, adaptive_recipe=None,
 ):
+    if adaptive_recipe is not None:
+        if __package__:
+            from .adaptive import validate_recipe
+        else:
+            from adaptive import validate_recipe
+        candidate = validate_recipe(adaptive_recipe, geotiff)
+        actual = dict(RADI=radi, GTHR=gthr, LTHR=lthr, FTHR=fthr, ATHR=athr, DTHR=dthr)
+        if candidate["params"] != actual or candidate["mode"] != extraction_mode or (
+                extraction_mode == "geophysics" and (geophys_filters != candidate["filter"] or geophys_extract_type != candidate["feature"])):
+            raise ValueError("Recipe differs from execution parameters. Preview/select again.")
     metadata = inspect_raster(geotiff, max_pixels=max_pixels)
     output = Path(out_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -99,13 +109,14 @@ def run_extraction_job(
             extraction_mode=extraction_mode, geophys_filters=geophys_filters,
             geophys_extract_type=geophys_extract_type, geophys_stride=geophys_stride,
             rgb_conversion=rgb_conversion, workers=workers, max_pixels=max_pixels,
-            cancelled=cancelled,
+            cancelled=cancelled, minimum_length_m=(adaptive_recipe["requested_scale_m"]["minimum_length"] if adaptive_recipe else None),
         )
         report_path = output/'mirage_report.json'
         markdown_path = output/'mirage_report.md'
         summary = {
             "version": __version__, "input_raster": str(Path(geotiff)),
             "input_sha256": _sha256(geotiff), "raster": metadata,
+            "adaptive_recipe": adaptive_recipe,
             "output_dir": str(output), "profile": profile, "compute_mode": compute_mode,
             "outputs": {"lineaments": shapefile_path,
                         "geopackage": str(out_base.with_suffix('.gpkg')),

@@ -769,6 +769,7 @@ def lineament_extraction_multiband(
     workers=1,
     max_pixels=16_000_000,
     cancelled=None,
+    minimum_length_m=None,
 ):
     """
     Extract lineaments from grayscale or multiband rasters.
@@ -911,6 +912,15 @@ def lineament_extraction_multiband(
                 lines.append(line)
 
     lines = clipped_lines(lines, safe_mask, transform)
+    if minimum_length_m is not None:
+        if not np.isfinite(minimum_length_m) or minimum_length_m <= 0:
+            raise ValueError("Physical minimum length must be finite and positive.")
+        if __package__:
+            from .adaptive import metric_resolution
+        else:
+            from adaptive import metric_resolution
+        metric_resolution(crs, transform)
+        lines = [line for line in lines if line.length >= minimum_length_m]
     lines = [line for line in lines if line.length > pixel_size*max(2.0, float(lthr)*0.5)]
     mode = _mode_config(extraction_mode)
     duplicate_spacing = pixel_size * max(1.0, float(dthr) * mode["duplicate_spacing_factor"])

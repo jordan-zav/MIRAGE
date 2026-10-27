@@ -16,7 +16,7 @@ spec.loader.exec_module(builder)
 
 
 def test_qgis_archive_contains_identical_core_and_valid_manifest(tmp_path):
-    output = builder.build(tmp_path/'MIRAGE_QGIS_1.1.0.zip')
+    output = builder.build(tmp_path/'MIRAGE_QGIS_1.2.0.zip')
     with zipfile.ZipFile(output) as archive:
         assert archive.testzip() is None
         names = archive.namelist()
@@ -25,12 +25,12 @@ def test_qgis_archive_contains_identical_core_and_valid_manifest(tmp_path):
         manifest = json.loads(archive.read('mirage_qgis/build_manifest.json'))
         for name, expected in manifest['files'].items():
             assert hashlib.sha256(archive.read(name)).hexdigest() == expected
-        for name in ('line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py',
+        for name in ('adaptive.py', 'line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py',
                      'version.py', 'ai/__init__.py', 'ai/parameter_advisor.py'):
             assert archive.read('mirage_qgis/core/'+name) == (ROOT/'src'/name).read_bytes()
         metadata = configparser.ConfigParser()
         metadata.read_string(archive.read('mirage_qgis/metadata.txt').decode())
-        assert metadata['general']['version'] == manifest['version'] == '1.1.0'
+        assert metadata['general']['version'] == manifest['version'] == '1.2.0'
         assert metadata['general']['hasProcessingProvider'] == 'yes'
         assert archive.read('mirage_qgis/LICENSE.txt') == (ROOT/'LICENSE.txt').read_bytes()
 

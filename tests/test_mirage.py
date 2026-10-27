@@ -127,7 +127,7 @@ class MIRAGETests(unittest.TestCase):
             self.assertTrue(Path(summary["outputs"]["geopackage"]).exists())
             self.assertGreaterEqual(summary["lineaments"]["count"], 1)
 
-    def test_recommend_settings_detects_circular_anthropogenic_pattern(self):
+    def test_circle_does_not_establish_anthropogenic_origin(self):
         size = 160
         yy, xx = np.indices((size, size))
         cy = cx = size // 2
@@ -140,10 +140,10 @@ class MIRAGETests(unittest.TestCase):
         image = np.clip(0.25 + 0.9 * ring + noise, 0.0, 1.0).astype(np.float32)
 
         recommendation = recommend_settings(image, pixel_size=10.0)
-        self.assertEqual(recommendation["feature_mode"], "Archaeological signature")
+        self.assertEqual(recommendation["feature_mode"], "Geological signature")
         self.assertGreaterEqual(recommendation["metrics"].get("circle_evidence", 0.0), 0.10)
 
-    def test_recommend_settings_detects_road_like_anthropogenic_pattern(self):
+    def test_linear_pattern_does_not_establish_anthropogenic_origin(self):
         size = 180
         image = np.full((size, size), 0.35, dtype=np.float32)
 
@@ -157,7 +157,7 @@ class MIRAGETests(unittest.TestCase):
         image = np.clip(image + rng.normal(0.0, 0.028, image.shape).astype(np.float32), 0.0, 1.0)
 
         recommendation = recommend_settings(image, pixel_size=10.0)
-        self.assertEqual(recommendation["feature_mode"], "Archaeological signature")
+        self.assertEqual(recommendation["feature_mode"], "Geological signature")
         self.assertGreaterEqual(recommendation["metrics"].get("road_evidence", 0.0), 0.08)
 
     def test_recommend_settings_prefers_geological_on_dense_geophysical_texture(self):
@@ -254,7 +254,7 @@ class MIRAGETests(unittest.TestCase):
         self.assertEqual(recommendation["feature_mode"], "Geological signature")
         self.assertGreaterEqual(recommendation["metrics"].get("lineation_directionality", 0.0), 0.20)
 
-    def test_recommend_settings_detects_archaeological_magnetic_context(self):
+    def test_undeclared_magnetic_rings_do_not_establish_archaeological_origin(self):
         h, w = 260, 260
         yy, xx = np.indices((h, w), dtype=np.float32)
         image = np.full((h, w), 0.72, dtype=np.float32)
@@ -279,8 +279,8 @@ class MIRAGETests(unittest.TestCase):
             pixel_size=10.0,
             source_hint={"is_true_color_rgb": False},
         )
-        self.assertEqual(recommendation["feature_mode"], "Archaeological signature")
-        self.assertEqual(recommendation["raster_family"], "archaeological magnetic raster")
+        self.assertEqual(recommendation["feature_mode"], "Geological signature")
+        self.assertEqual(recommendation["raster_family"], "unclassified raster morphology")
 
     def test_validate_rgb_geotiff_accepts_rgba_with_alpha(self):
         with tempfile.TemporaryDirectory() as tmpdir:

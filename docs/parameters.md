@@ -1,4 +1,4 @@
-> MIRAGE 1.1.0: la interfaz principal es QGIS. Consulta el [README](../README.es.md) y la [validación vigente](VALIDATION_1_1_0.md). El texto inferior conserva el contexto técnico anterior y no acredita nuevas pruebas de campo.
+> MIRAGE 1.2.0: la interfaz principal es QGIS. Consulta el [README](../README.es.md) y la [validación vigente](VALIDATION_1_2_0.md). El texto inferior conserva el contexto técnico anterior y no acredita nuevas pruebas de campo.
 
 # Parameters
 

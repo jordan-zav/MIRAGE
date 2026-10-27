@@ -108,7 +108,7 @@ class GeophysicsTests(unittest.TestCase):
         image = np.clip(dikes + noise, 0.0, 1.0)
         
         # Source hint that it's a potential field / non-true color
-        source_hint = {"is_true_color_rgb": False}
+        source_hint = {"is_true_color_rgb": False, "input_kind": "magnetic"}
         
         # Call recommend_settings (we use a 3-band array to trigger graylike_rgb)
         rgb_data = np.stack([image, image, image], axis=0)

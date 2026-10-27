@@ -21,7 +21,7 @@ def build(output):
     files['mirage_qgis/metadata.txt'] = (ROOT/'mirage_qgis/metadata.txt').read_bytes()
     files['mirage_qgis/icon.png'] = (ROOT/'assets/branding/logo_clean.png').read_bytes()
     files['mirage_qgis/core/__init__.py'] = b'"""Shared MIRAGE numerical core, bundled without modification."""\n'
-    for name in ('line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py', 'version.py',
+    for name in ('adaptive.py', 'line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py', 'version.py',
                  'ai/__init__.py', 'ai/parameter_advisor.py'):
         files['mirage_qgis/core/'+name] = (ROOT/'src'/name).read_bytes()
     for name in ('LICENSE.txt', 'README.md', 'README.es.md'):
@@ -32,7 +32,7 @@ def build(output):
         dirty = bool(subprocess.check_output(['git', '-C', str(ROOT), 'diff', '--name-only'], text=True).strip())
     except subprocess.CalledProcessError:
         commit, dirty = None, None
-    manifest = {'version': '1.1.0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
+    manifest = {'version': '1.2.0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
                 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
                 'core_source': 'src; the plugin contains byte-identical copies',
                 'scientific_validation': 'Software and synthetic checks do not establish field validity.'}

@@ -890,6 +890,10 @@ class LineamentGUI:
                     second=MODE_LABELS[self.language][second_name],
                 )
             )
+            if not recommendation.get('classification_enabled', True):
+                self.recommendation_confidence_var.set(
+                    'Origin scoring disabled: declare input and scale in QGIS.' if self.language == 'en'
+                    else 'Puntaje de origen desactivado: declarar tipo y escala en QGIS.')
             self.recommendation_metrics_var.set(
                 f"{self._t('scores')}\n"
                 f"{MODE_LABELS[self.language]['Geological signature']}: {recommendation['mode_scores']['Geological signature']}\n"

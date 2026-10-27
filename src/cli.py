@@ -7,6 +7,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp, Resampling
 
+from adaptive import validate_recipe
 from ai.parameter_advisor import recommend_settings
 from config import FEATURE_MODES, PRESETS
 from pipeline import run_extraction_job, validate_rgb_geotiff
@@ -42,6 +43,8 @@ def _build_parser():
         default="auto",
         help="Compute backend preference for auto-recommendation (GUI remains unchanged).",
     )
+    parser.add_argument("--recipe", type=Path, help="Selected adaptive recipe JSON; source identity is checked")
+    parser.add_argument("--input-kind", choices=("unknown", "terrain", "magnetic", "gravity", "optical"), default="unknown")
     parser.add_argument("--auto", action="store_true", help="Analyze the raster and recommend settings")
     parser.add_argument(
         "--gp-filters",
@@ -100,6 +103,8 @@ def _resolve_parameters(args, infile):
             out_w = max(64, int(round(w * scale)))
             interps = tuple(src.colorinterp or ())
             source_hint = {
+                "input_kind": args.input_kind,
+                "goal": "geometry" if args.feature_mode == "Archaeological signature" else "continuity",
                 "is_true_color_rgb": (
                     len(interps) >= 3
                     and interps[0] == ColorInterp.red
@@ -135,6 +140,8 @@ def _resolve_parameters(args, infile):
 def main(argv=None):
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.recipe and (args.auto or any(getattr(args, k) is not None for k in ("radi", "gthr", "lthr", "fthr", "athr", "dthr"))):
+        parser.error("A selected recipe cannot be combined with --auto or parameter overrides.")
 
     # Expand any glob patterns in input files
     infiles = []
@@ -153,8 +160,14 @@ def main(argv=None):
     summaries = []
 
     for infile in infiles:
-        params, feature_mode, profile = _resolve_parameters(args, infile)
-        resolved_mode_val = FEATURE_MODES[feature_mode]["value"]
+        recipe = json.loads(args.recipe.read_text(encoding='utf-8')) if args.recipe else None
+        if recipe:
+            candidate = validate_recipe(recipe, infile)
+            params, profile = candidate['params'], 'Adaptive '+recipe['selected']
+            resolved_mode_val = candidate['mode']
+        else:
+            params, feature_mode, profile = _resolve_parameters(args, infile)
+            resolved_mode_val = FEATURE_MODES[feature_mode]['value']
         
         if use_subdirs:
             out_dir = Path(args.output) / Path(infile).stem
@@ -171,10 +184,11 @@ def main(argv=None):
             athr=params["ATHR"],
             dthr=params["DTHR"],
             extraction_mode=resolved_mode_val,
-            geophys_filters=args.gp_filters if resolved_mode_val == "geophysics" else None,
-            geophys_extract_type=args.gp_type if resolved_mode_val == "geophysics" else "trough",
+            geophys_filters=(candidate["filter"] if recipe else args.gp_filters) if resolved_mode_val == "geophysics" else None,
+            geophys_extract_type=(candidate["feature"] if recipe else args.gp_type) if resolved_mode_val == "geophysics" else "trough",
             geophys_stride=args.gp_stride if resolved_mode_val == "geophysics" else 1,
             rgb_conversion=args.rgb_conversion,
+            adaptive_recipe=recipe,
             profile=profile,
             compute_mode=args.compute,
         )
