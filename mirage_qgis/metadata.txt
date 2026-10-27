@@ -1,0 +1,19 @@
+[general]
+name=MIRAGE
+description=Extract and review geological and archaeological raster signatures in QGIS
+about=MIRAGE shares its numerical core with the Python API and CLI. Includes a dockable panel, Processing extraction and heuristic parameter recommendations, native GDAL/OGR I/O and GeoPackage results. Extracted morphology requires independent interpretation.
+version=1.1.0
+qgisMinimumVersion=3.40
+qgisMaximumVersion=3.99
+author=Jordan Zavaleta (GisGeo Dev)
+email=jordanzav@gisgeo.dev
+homepage=https://github.com/jordan-zav/MIRAGE
+repository=https://github.com/jordan-zav/MIRAGE
+tracker=https://github.com/jordan-zav/MIRAGE/issues
+icon=icon.png
+category=Raster
+tags=lineaments,geology,archaeology,geophysics,morphology,GeoPackage
+experimental=True
+deprecated=False
+hasProcessingProvider=yes
+license=GPL-3.0-or-later

@@ -1,9 +1,13 @@
 import math
 
-import geopandas as gpd
 import numpy as np
-import rasterio
-from rasterio.enums import ColorInterp
+
+if __package__:
+    from .raster_backend import (ColorInterp, Transform, clipped_lines, inspect_raster,
+                                 open_raster, validate_geophysics_grid, write_vectors)
+else:
+    from raster_backend import (ColorInterp, Transform, clipped_lines, inspect_raster,
+                                open_raster, validate_geophysics_grid, write_vectors)
 
 from scipy.spatial import cKDTree
 from scipy.ndimage import gaussian_filter, convolve
@@ -211,7 +215,7 @@ def prune_skeleton(skel, min_branch_length=10):
 def _read_grayscale_image(src, rgb_conversion="average"):
     count = int(src.count)
     if count == 1:
-        return src.read(1).astype(np.float32)
+        return src.read(1, masked=True).astype(np.float32).filled(np.nan)
     if count in (3, 4):
         if count == 4:
             interps = tuple(src.colorinterp or ())
@@ -220,7 +224,9 @@ def _read_grayscale_image(src, rgb_conversion="average"):
                     "MIRAGE accepts single-band, RGB GeoTIFF (3 bands), or RGBA where band 4 is alpha."
                 )
         
-        data = src.read(indexes=[1, 2, 3]).astype(np.float32)
+        data = src.read(indexes=[1, 2, 3], masked=True).astype(np.float32).filled(np.nan)
+        if count == 4:
+            data[:, src.read(4) <= 0] = np.nan
         r, g, b = data[0], data[1], data[2]
         
         mode = str(rgb_conversion).lower().strip()
@@ -244,8 +250,11 @@ def _read_grayscale_image(src, rgb_conversion="average"):
 
 
 def _normalize_image(image):
-    image = np.nan_to_num(image, nan=0.0, posinf=0.0, neginf=0.0)
-    imin, imax = np.nanmin(image), np.nanmax(image)
+    valid = np.isfinite(image)
+    if not valid.any():
+        raise ValueError("The raster contains no valid finite pixels.")
+    imin, imax = image[valid].min(), image[valid].max()
+    image = np.where(valid, image, np.median(image[valid]))
     return (image - imin) / (imax - imin + 1e-6)
 
 
@@ -491,7 +500,7 @@ def _line_angle(line):
 
 def _line_record(
     idx, line, mode_name, radi, gthr, lthr, fthr, athr, dthr, pixel_size,
-    geophys_filters=None, geophys_extract_type="", geophys_stride=0
+    geophys_filters=None, geophys_extract_type="", geophys_stride=0, transform=None
 ):
     coords = np.asarray(line.coords)
     if len(coords) < 2:
@@ -519,10 +528,20 @@ def _line_record(
             "elongation": elongation,
         }
 
+    if transform is not None and len(coords) >= 2:
+        xs = coords[:, 0]-transform.c
+        ys = coords[:, 1]-transform.f
+        determinant = transform.a*transform.e-transform.b*transform.d
+        pixel_coords = np.column_stack(((transform.e*xs-transform.b*ys)/determinant,
+                                        (-transform.d*xs+transform.a*ys)/determinant))
+        pixel_length = float(np.linalg.norm(np.diff(pixel_coords, axis=0), axis=1).sum())
+    else:
+        pixel_length = metrics['pixel_length']/pixel_size
     return {
         "id": int(idx),
         "mode": mode_name,
-        "pix_len": float(metrics["pixel_length"]),
+        "pix_len": pixel_length,
+        "map_len": float(metrics["pixel_length"]),
         "chord": float(metrics["chord"]),
         "straight": float(metrics["straightness"]),
         "elong": float(metrics["elongation"]),
@@ -639,7 +658,9 @@ def link_segments(lines, dthr, athr, extraction_mode="signature"):
 
 
 def _pixel_to_world(transform, coords):
-    return [rasterio.transform.xy(transform, float(r), float(c)) for r, c in coords]
+    return [(transform.a*(float(c)+0.5)+transform.b*(float(r)+0.5)+transform.c,
+             transform.d*(float(c)+0.5)+transform.e*(float(r)+0.5)+transform.f)
+            for r, c in coords]
 
 
 def _bbox_distance(b1, b2):
@@ -704,9 +725,8 @@ def _process_region_chunk(args):
 
 def _process_polyline_chunk(args):
     chunk_list, trans_args = args
-    from rasterio.transform import Affine
     from scipy.ndimage import gaussian_filter1d
-    transform = Affine(*trans_args)
+    transform = Transform(*trans_args)
     
     results = []
     for coords in chunk_list:
@@ -720,6 +740,16 @@ def _process_polyline_chunk(args):
         world_coords = _pixel_to_world(transform, smoothed_coords)
         results.append(world_coords)
     return results
+
+
+def _parallel_map(function, arguments, workers):
+    if not arguments:
+        return []
+    if workers == 1 or len(arguments) == 1:
+        return [function(argument) for argument in arguments]
+    from concurrent.futures import ProcessPoolExecutor
+    with ProcessPoolExecutor(max_workers=min(workers, len(arguments))) as executor:
+        return list(executor.map(function, arguments))
 
 
 def lineament_extraction_multiband(
@@ -736,6 +766,9 @@ def lineament_extraction_multiband(
     geophys_extract_type="trough",
     geophys_stride=1,
     rgb_conversion="auto",
+    workers=1,
+    max_pixels=16_000_000,
+    cancelled=None,
 ):
     """
     Extract lineaments from grayscale or multiband rasters.
@@ -747,23 +780,54 @@ def lineament_extraction_multiband(
     ATHR: maximum angular difference when linking segments
     DTHR: maximum endpoint distance in pixels when linking segments
     """
-    import os
-    from concurrent.futures import ProcessPoolExecutor
+    from scipy.ndimage import binary_erosion
+
+    def check_cancelled():
+        if cancelled is not None and cancelled():
+            raise InterruptedError("MIRAGE processing cancelled.")
+
+    check_cancelled()
+    inspect_raster(geotiff, max_pixels=max_pixels)
+    if extraction_mode not in ("signature", "geometry", "geophysics"):
+        raise ValueError("Unknown extraction mode.")
+    if not 1 <= workers <= 16:
+        raise ValueError("workers must be between 1 and 16.")
+    if not np.isfinite([radi, gthr, lthr, fthr, athr, dthr, geophys_stride]).all():
+        raise ValueError("Parameters must be finite numbers.")
+    if radi < 0 or not 0 <= gthr <= 100 or lthr < 2 or fthr < 0 or not 0 <= athr <= 180 or dthr < 0:
+        raise ValueError("Invalid extraction parameters; review thresholds and distances.")
+    if geophys_stride < 1:
+        raise ValueError("Geophysical stride must be positive.")
+    if geophys_extract_type not in ('trough', 'ridge'):
+        raise ValueError("Geophysical feature must be trough or ridge.")
+    if rgb_conversion not in ('auto', 'average', 'gli', 'vari', 'luma'):
+        raise ValueError("Unknown RGB conversion.")
 
     # Resolve rgb_conversion: if auto, use GLI for geometry mode, average for others.
     resolved_conversion = str(rgb_conversion).lower().strip()
     if resolved_conversion == "auto":
         resolved_conversion = "gli" if extraction_mode == "geometry" else "average"
 
-    with rasterio.open(geotiff) as src:
+    with open_raster(geotiff) as src:
+        if extraction_mode == "geophysics":
+            validate_geophysics_grid(src)
+        if src.crs.is_geographic and fthr > 0:
+            raise ValueError("For geographic input use FTHR=0, or reproject to a metric CRS before simplifying.")
         image = _read_grayscale_image(src, rgb_conversion=resolved_conversion)
         transform = src.transform
         crs = src.crs
-        pixel_size = max(abs(src.transform.a), abs(src.transform.e))
+        pixel_size = max(math.hypot(src.transform.a, src.transform.d),
+                         math.hypot(src.transform.b, src.transform.e))
 
+    valid_mask = np.isfinite(image)
+    if extraction_mode == "geophysics" and not valid_mask.all():
+        raise ValueError("Geophysical FFT filters require a complete grid; fill gaps explicitly before processing.")
     image = _normalize_image(image)
+    check_cancelled()
     
-    num_workers = max(1, os.cpu_count() - 1) if os.cpu_count() else 2
+    num_workers = int(workers)
+    margin = max(1, int(math.ceil(4*max(float(radi)/2, 0.6))))
+    safe_mask = binary_erosion(valid_mask, iterations=margin, border_value=1) if not valid_mask.all() else valid_mask
 
     if extraction_mode == "geophysics":
         if isinstance(geophys_filters, str):
@@ -772,9 +836,12 @@ def lineament_extraction_multiband(
             filters_list = geophys_filters
         else:
             filters_list = ["TDR"]
+        if not filters_list or any(name.upper() not in {"NONE", "TDR", "AS", "VDR1", "VDR2", "THDR"} for name in filters_list):
+            raise ValueError("Unknown geophysical filter.")
             
         pixel_lines = []
         for f_name in filters_list:
+            check_cancelled()
             skel = _build_geophysics_skeleton(
                 image,
                 radi=radi,
@@ -790,8 +857,7 @@ def lineament_extraction_multiband(
             chunks = _chunk_list(regions_coords, num_workers)
             task_args = [(chk, float(lthr), extraction_mode) for chk in chunks if len(chk) > 0]
             
-            with ProcessPoolExecutor(max_workers=num_workers) as executor:
-                results = list(executor.map(_process_region_chunk, task_args))
+            results = _parallel_map(_process_region_chunk, task_args, num_workers)
                 
             for res_list in results:
                 pixel_lines.extend(res_list)
@@ -801,6 +867,7 @@ def lineament_extraction_multiband(
         else:
             skel = _build_edge_skeleton(image, radi=radi, gthr=gthr)
 
+        skel &= safe_mask
         skel = prune_skeleton(skel, min_branch_length=max(4, int(lthr // 2)))
 
         pixel_lines = []
@@ -808,8 +875,7 @@ def lineament_extraction_multiband(
         chunks = _chunk_list(regions_coords, num_workers)
         task_args = [(chk, float(lthr), extraction_mode) for chk in chunks if len(chk) > 0]
         
-        with ProcessPoolExecutor(max_workers=num_workers) as executor:
-            results = list(executor.map(_process_region_chunk, task_args))
+        results = _parallel_map(_process_region_chunk, task_args, num_workers)
             
         for res_list in results:
             pixel_lines.extend(res_list)
@@ -820,6 +886,7 @@ def lineament_extraction_multiband(
         athr=float(athr),
         extraction_mode=extraction_mode,
     )
+    check_cancelled()
     pixel_lines = [
         coords
         for coords in pixel_lines
@@ -830,8 +897,7 @@ def lineament_extraction_multiband(
     chunks = _chunk_list(pixel_lines, num_workers)
     poly_args = [(chk, trans_args) for chk in chunks if len(chk) > 0]
     
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        world_lines_lists = list(executor.map(_process_polyline_chunk, poly_args))
+    world_lines_lists = _parallel_map(_process_polyline_chunk, poly_args, num_workers)
 
     lines = []
     for wl_list in world_lines_lists:
@@ -844,6 +910,8 @@ def lineament_extraction_multiband(
             if line.length > pixel_size * max(2.0, float(lthr) * 0.5):
                 lines.append(line)
 
+    lines = clipped_lines(lines, safe_mask, transform)
+    lines = [line for line in lines if line.length > pixel_size*max(2.0, float(lthr)*0.5)]
     mode = _mode_config(extraction_mode)
     duplicate_spacing = pixel_size * max(1.0, float(dthr) * mode["duplicate_spacing_factor"])
     lines = suppress_parallel_duplicates(
@@ -851,9 +919,6 @@ def lineament_extraction_multiband(
         spacing=duplicate_spacing,
         angle_threshold=mode["duplicate_angle"],
     )
-
-    if not lines:
-        raise RuntimeError("No lineaments detected.")
 
     records = [
         _line_record(
@@ -870,11 +935,11 @@ def lineament_extraction_multiband(
             geophys_filters=geophys_filters,
             geophys_extract_type=geophys_extract_type,
             geophys_stride=geophys_stride,
+            transform=transform,
         )
         for idx, line in enumerate(lines, start=1)
     ]
-    gdf = gpd.GeoDataFrame(records, geometry=lines, crs=crs)
-    gdf.to_file(f"{out_base}.shp")
-    gdf.to_file(f"{out_base}.gpkg", layer="lineaments", driver="GPKG")
+    check_cancelled()
+    write_vectors(out_base, records, lines, crs)
 
     return f"{out_base}.shp"

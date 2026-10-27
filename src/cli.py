@@ -175,6 +175,8 @@ def main(argv=None):
             geophys_extract_type=args.gp_type if resolved_mode_val == "geophysics" else "trough",
             geophys_stride=args.gp_stride if resolved_mode_val == "geophysics" else 1,
             rgb_conversion=args.rgb_conversion,
+            profile=profile,
+            compute_mode=args.compute,
         )
         summary["profile"] = profile
         summary["compute_mode"] = args.compute

@@ -25,7 +25,7 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Lint source and tests
-        run: python -m ruff check src tests
+        run: python -m ruff check src tests mirage_qgis scripts
 
       - name: Run tests
         run: python -B -m pytest
