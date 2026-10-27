@@ -1,3 +1,5 @@
+<p align="center"><strong>English</strong> · <a href="README.es.md">Español</a></p>
+
 <div align="center">
   <img src="assets/branding/logo_clean.png" alt="MIRAGE" width="128">
 
@@ -23,7 +25,7 @@ rasters through an auditable multiscale image-processing workflow.
 
 ## Workflow at a glance
 
-```text
+~~~text
 Single-band / RGB / RGBA GeoTIFF
                 │
                 ▼
@@ -37,7 +39,7 @@ Single-band / RGB / RGBA GeoTIFF
                 │
                 ▼
  Shapefile + GeoPackage + JSON run report
-```
+~~~
 
 ## Capabilities
 
@@ -78,36 +80,36 @@ Source installation remains available for reproducibility and development.
 
 ## Install from source
 
-```powershell
+~~~powershell
 git clone https://github.com/jordan-zav/MIRAGE.git
 cd MIRAGE
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-```
+~~~
 
 ## Run the GUI
 
-```powershell
+~~~powershell
 python src/gui.py
-```
+~~~
 
-Windows users can also run `run_mirage.bat`.
+Windows users can also run <code>run_mirage.bat</code>.
 
 ## Run the CLI
 
-```powershell
+~~~powershell
 python src/cli.py -i input.tif -o output_folder --profile "Structural continuity"
-```
+~~~
 
 The output directory contains:
 
 | File | Contents |
 | --- | --- |
-| `lineaments.shp` | ESRI Shapefile geometry and attributes |
-| `lineaments.gpkg` | Equivalent GeoPackage layer |
-| `mirage_report.json` | Inputs, parameters, output paths and summary metrics |
+| <code>lineaments.shp</code> | ESRI Shapefile geometry and attributes |
+| <code>lineaments.gpkg</code> | Equivalent GeoPackage layer |
+| <code>mirage_report.json</code> | Inputs, parameters, output paths and summary metrics |
 
 ## Quality-control checklist
 
@@ -135,11 +137,11 @@ The output directory contains:
 
 ## Development and verification
 
-```powershell
+~~~powershell
 python -m pip install -r requirements-dev.txt
 python -m pytest -q
 python -m ruff check .
-```
+~~~
 
 The automated tests exercise the core extraction pipeline and geophysical
 synthetic cases. Visual and geological validation remains a separate step.
@@ -148,14 +150,14 @@ synthetic cases. Visual and geological validation remains a separate step.
 
 | Path | Contents |
 | --- | --- |
-| `src/pipeline.py` | End-to-end processing and export workflow |
-| `src/line_core.py` | Edge, morphology and curve-linking algorithms |
-| `src/config.py` | Profiles and processing configuration |
-| `src/ai` | Parameter recommendation logic |
-| `src/gui.py` | Desktop interface |
-| `src/cli.py` | Command-line interface |
-| `tests` | Core and geophysical regression tests |
-| `docs` | Workflow, parameters and technical report |
+| <code>src/pipeline.py</code> | End-to-end processing and export workflow |
+| <code>src/line_core.py</code> | Edge, morphology and curve-linking algorithms |
+| <code>src/config.py</code> | Profiles and processing configuration |
+| <code>src/ai</code> | Parameter recommendation logic |
+| <code>src/gui.py</code> | Desktop interface |
+| <code>src/cli.py</code> | Command-line interface |
+| <code>tests</code> | Core and geophysical regression tests |
+| <code>docs</code> | Workflow, parameters and technical report |
 
 ## Project status
 
