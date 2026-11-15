@@ -144,4 +144,4 @@ RADI se redondea a pixeles nativos. El detector tonal conserva sigma minimo de 1
 
 ## API instalable de desarrollo
 
-La rama local 1.3.0.dev0 a?ade la distribuci?n mirage-lineaments y el espacio de nombres mirage. Consulte [API](docs/API.md) y [m?todos y procedencia](docs/LINEAMENT_METHODS.md). Esta rama no es una publicaci?n 1.3; la inferencia neuronal es experimental y no incluye pesos de modelos.
+La rama local 1.3.0.dev0 añade la distribución mirage-lineaments y el espacio de nombres mirage. Consulte [API](docs/API.md) y [métodos y procedencia](docs/LINEAMENT_METHODS.md). Esta rama no es una publicación 1.3; la inferencia neuronal es experimental y no incluye pesos de modelos.
