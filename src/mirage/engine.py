@@ -89,7 +89,8 @@ def _ridges(strength, threshold):
     dr, dc = np.sin(theta), np.cos(theta)
     before = map_coordinates(strength, [rr-dr, cc-dc], order=1, mode='nearest')
     after = map_coordinates(strength, [rr+dr, cc+dc], order=1, mode='nearest')
-    mask = (strength > threshold) & (strength >= before) & (strength >= after)
+    curvature = .5 * (gxx + gyy - np.hypot(gxx - gyy, 2 * gyx))
+    mask = (strength > threshold) & (strength >= before) & (strength >= after) & (curvature < -1e-12)
     mask[[0, -1], :] = False
     mask[:, [0, -1]] = False
     return morphology.skeletonize(mask)
@@ -151,10 +152,17 @@ def extract(image, *, route='geomatic', method='thdr', pixel_size=1.,
         for scale in scales:
             if not np.isfinite(scale) or scale <= 0:
                 raise ValueError('Wavelet scales must be finite and positive.')
-            # Undecimated separable Gaussian wavelets, evaluated at physical scale.
-            coeff_x, _ = pywt.cwt(image, [scale/pixel_size], 'gaus1', axis=1, method='fft')
-            coeff_y, _ = pywt.cwt(image, [scale/pixel_size], 'gaus1', axis=0, method='fft')
-            amplitude = np.hypot(coeff_x[0], coeff_y[0])
+            # CWT implicitly zero-pads. On potential fields with arbitrary DC
+            # offsets that creates artificial perimeter edges dominating the
+            # normalization, suppressing interior contacts at every threshold.
+            # Reflect a full wavelet support before filtering and crop before
+            # normalization; map coordinates and physical scales stay unchanged.
+            padding = max(8, int(np.ceil(8 * scale / pixel_size)))
+            padded = np.pad(image, padding, mode='reflect')
+            padded = padded - np.mean(padded)
+            coeff_x, _ = pywt.cwt(padded, [scale/pixel_size], 'gaus1', axis=1, method='fft')
+            coeff_y, _ = pywt.cwt(padded, [scale/pixel_size], 'gaus1', axis=0, method='fft')
+            amplitude = np.hypot(coeff_x[0], coeff_y[0])[padding:-padding, padding:-padding]
             strength = _normalize_image(amplitude)
             layers.append((strength, _ridges(strength, threshold), float(scale), None, amplitude))
     else:

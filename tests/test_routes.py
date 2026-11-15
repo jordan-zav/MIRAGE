@@ -64,6 +64,19 @@ def test_invalid_or_cancelled_inputs_fail_before_processing():
         mirage.extract(np.ones((32,32)),cancelled=lambda:True)
 
 
+def test_wavelet_contact_is_localized_and_invariant_to_field_datum():
+    pytest.importorskip('pywt')
+    image = np.tile(np.tanh((np.arange(128) - 63) / 3), (128, 1))
+    results = [mirage.extract(image + offset, method='wavelets', pixel_size=50,
+                             scales=(50, 100, 200), threshold=.35) for offset in (0, 10000)]
+    np.testing.assert_allclose(results[0].strength, results[1].strength, atol=1e-10)
+    for result in results:
+        assert result.lines
+        coordinates = np.concatenate([np.asarray(line.coords) for line in result.lines])
+        assert np.median(np.abs(coordinates[:, 0] / 50 - 63.5)) <= 2
+        assert result.strength[10:-10, 60:67].max() > .9
+
+
 def test_neural_requires_explicit_license_and_verified_external_hash(tmp_path):
     from mirage.neural import infer
     image = np.ones((32,32))
