@@ -1,7 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_submodules
+from pathlib import Path
+import sys
 
-datas = []
+sys.path.insert(0, str(Path(SPECPATH) / 'src'))
+
+datas = [('src/mirage/assets/branding/logo.png', 'mirage/assets/branding')]
 binaries = []
 hiddenimports = collect_submodules('mirage')
 tmp_ret = collect_all('rasterio')
