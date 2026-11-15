@@ -20,10 +20,11 @@ def build(output):
         files['mirage_qgis/'+file.name] = file.read_bytes()
     files['mirage_qgis/metadata.txt'] = (ROOT/'mirage_qgis/metadata.txt').read_bytes()
     files['mirage_qgis/icon.png'] = (ROOT/'assets/branding/logo_clean.png').read_bytes()
-    files['mirage_qgis/core/__init__.py'] = b'"""Shared MIRAGE numerical core, bundled without modification."""\n'
-    for name in ('adaptive.py', 'line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py', 'version.py',
-                 'ai/__init__.py', 'ai/parameter_advisor.py'):
-        files['mirage_qgis/core/'+name] = (ROOT/'src'/name).read_bytes()
+    core = ROOT/'src/mirage'
+    for source in core.rglob('*.py'):
+        name = source.relative_to(core).as_posix()
+        if name not in ('gui.py', 'cli.py', '__main__.py'):
+            files['mirage_qgis/core/'+name] = source.read_bytes()
     for name in ('LICENSE.txt', 'README.md', 'README.es.md'):
         source = ROOT/name if name == 'LICENSE.txt' else ROOT/'mirage_qgis'/name
         files['mirage_qgis/'+name] = source.read_bytes()
@@ -32,9 +33,9 @@ def build(output):
         dirty = bool(subprocess.check_output(['git', '-C', str(ROOT), 'diff', '--name-only'], text=True).strip())
     except subprocess.CalledProcessError:
         commit, dirty = None, None
-    manifest = {'version': '1.2.0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
+    manifest = {'version': '1.3.0.dev0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
                 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
-                'core_source': 'src; the plugin contains byte-identical copies',
+                'core_source': 'src/mirage; the plugin contains byte-identical copies',
                 'scientific_validation': 'Software and synthetic checks do not establish field validity.'}
     files['mirage_qgis/build_manifest.json'] = json.dumps(manifest, indent=2).encode()
     with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:

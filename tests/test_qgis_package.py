@@ -27,10 +27,10 @@ def test_qgis_archive_contains_identical_core_and_valid_manifest(tmp_path):
             assert hashlib.sha256(archive.read(name)).hexdigest() == expected
         for name in ('adaptive.py', 'line_core.py', 'pipeline.py', 'raster_backend.py', 'config.py',
                      'version.py', 'ai/__init__.py', 'ai/parameter_advisor.py'):
-            assert archive.read('mirage_qgis/core/'+name) == (ROOT/'src'/name).read_bytes()
+            assert archive.read('mirage_qgis/core/'+name) == (ROOT/'src/mirage'/name).read_bytes()
         metadata = configparser.ConfigParser()
         metadata.read_string(archive.read('mirage_qgis/metadata.txt').decode())
-        assert metadata['general']['version'] == manifest['version'] == '1.2.0'
+        assert metadata['general']['version'] == manifest['version'] == '1.3.0.dev0'
         assert metadata['general']['hasProcessingProvider'] == 'yes'
         assert archive.read('mirage_qgis/LICENSE.txt') == (ROOT/'LICENSE.txt').read_bytes()
 

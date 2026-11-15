@@ -178,3 +178,8 @@ Processing: mirage:recommend_parameters creates a plan, mirage:preview_candidate
 The physical minimum length is checked again on final geometry after simplification and mask clipping. Resolution may prevent representing lengths below two pixels. Variants change smoothing and threshold while retaining minimum length, linking gap, simplification and objective. PNGs show the original raster; TDR traces derive from the transformed field. Circular morphology and higher trace counts do not establish origin or accuracy.
 
 RADI is rounded to native pixels. Tonal edges retain a minimum sigma of 1.2 pixels and geophysics 0.5; requesting zero smoothing does not disable this numerical filter. The JSON records the parameter conversion.
+
+
+## Installable development API
+
+The local 1.3.0.dev0 development branch adds the mirage-lineaments distribution and the lazy mirage namespace. See [API](docs/API.md) and [methods and provenance](docs/LINEAMENT_METHODS.md). This branch is not a published 1.3 release; neural inference is experimental and no model weights are bundled.

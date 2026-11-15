@@ -140,3 +140,8 @@ Processing: mirage:recommend_parameters genera el plan, mirage:preview_candidate
 La longitud minima fisica se comprueba de nuevo en la geometria final, despues de simplificar y recortar mascaras. La resolucion puede impedir representar longitudes menores de dos pixeles. Las variantes alteran suavizado y umbral; mantienen longitud minima, enlace, simplificacion y objetivo. Los PNG muestran el raster original; las trazas TDR provienen del campo transformado. Ni las formas circulares ni un mayor numero de trazas demuestran origen o precision.
 
 RADI se redondea a pixeles nativos. El detector tonal conserva sigma minimo de 1,2 pixeles y geofisica de 0,5; solicitar cero suavizado no desactiva ese filtro numerico. El JSON registra la conversion a parametros.
+
+
+## API instalable de desarrollo
+
+La rama local 1.3.0.dev0 a?ade la distribuci?n mirage-lineaments y el espacio de nombres mirage. Consulte [API](docs/API.md) y [m?todos y procedencia](docs/LINEAMENT_METHODS.md). Esta rama no es una publicaci?n 1.3; la inferencia neuronal es experimental y no incluye pesos de modelos.
