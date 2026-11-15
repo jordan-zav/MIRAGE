@@ -12,7 +12,7 @@ import torch
 from train_lineament_model import load_upstream, prepare
 
 
-def main(session):
+def main(session, continuation=False):
     session = Path(session)
     bank = session / 'bank-complete'
     models = session / 'models'
@@ -50,8 +50,25 @@ def main(session):
         def loss_for(outputs, targets, masks):
             return sum((loss_fn(output, targets) * masks).sum() / masks.sum() for output in outputs) / len(outputs)
         history, best, anchor, stale, best_epoch = [], float('inf'), float('inf'), 0, 0
+        restart_epoch = None
+        previous_seconds = 0.
+        if continuation:
+            initial_path = session / f'training-{seed}.json'
+            previous = json.loads(initial_path.read_text())
+            preserved = session / f'training-initial-{seed}.json'
+            if not preserved.exists():
+                preserved.write_bytes(initial_path.read_bytes())
+            if previous['stable']:
+                summaries.append(previous)
+                continue
+            model.load_state_dict(torch.load(models / f'teed-{seed}.pth', map_location=device, weights_only=True))
+            history = previous['history']
+            best = anchor = previous['best_validation_bce']
+            best_epoch = previous['selected_epoch']
+            previous_seconds = history[-1]['seconds']
+            restart_epoch = len(history) + 1
         started = time.monotonic()
-        for epoch in range(1, 151):
+        for epoch in range(len(history) + 1, 901 if continuation else 151):
             model.train()
             rng = np.random.default_rng(seed + epoch)
             order = rng.permutation(len(arrays['train'][0]))
@@ -85,14 +102,14 @@ def main(session):
                 anchor, stale = val, 0
             else:
                 stale += 1
-            row = dict(epoch=epoch, train_bce=float(np.mean(losses)), validation_bce=val, seconds=time.monotonic() - started)
+            row = dict(epoch=epoch, train_bce=float(np.mean(losses)), validation_bce=val, seconds=previous_seconds + time.monotonic() - started)
             history.append(row)
             record = dict(seed=seed, device=device, history=history, selected_epoch=best_epoch,
-                          best_validation_bce=best, stable=stale >= 15, max_epochs=150,
+                          best_validation_bce=best, stable=stale >= 15, max_epochs=900 if continuation else 150, optimizer_restart_epoch=restart_epoch,
                           budget_seconds=10800, patience=15, upstream_weights_sha256=hashlib.sha256(upstream.read_bytes()).hexdigest())
             (session / f'training-{seed}.json').write_text(json.dumps(record, indent=2))
             print(seed, row, 'stale', stale, flush=True)
-            if (epoch >= 20 and stale >= 15) or time.monotonic() - started >= 10800:
+            if (epoch >= 20 and stale >= 15) or previous_seconds + time.monotonic() - started >= 10800:
                 break
         model.load_state_dict(torch.load(models / f'teed-{seed}.pth', map_location=device, weights_only=True))
         export(model.cpu(), arrays['validation'][0][:5].cpu(), models / f'teed-{seed}.onnx', seed, record)
@@ -132,4 +149,6 @@ def export(model, inputs, destination, seed, record):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('session')
-    main(parser.parse_args().session)
+    parser.add_argument('--continue-until-stable', action='store_true')
+    args = parser.parse_args()
+    main(args.session, args.continue_until_stable)
