@@ -137,7 +137,7 @@ def extract(image, *, route='geomatic', method='thdr', pixel_size=1.,
         layers.append((infer(image, model), None, None, None))
     elif method == 'legacy':
         strength = _normalize_image(image)
-        mask = _build_geophysics_skeleton(strength, 1, 10, 'TDR', 'ridge', 1, pixel_size)
+        mask = _build_geophysics_skeleton(strength, 1, 100*threshold, 'TDR', 'ridge', 1, pixel_size)
         layers.append((strength, mask, None, None))
     elif method in ('thdr', 'worming'):
         for height in heights if method == 'worming' else (0.,):

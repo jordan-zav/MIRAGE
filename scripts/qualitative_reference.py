@@ -17,6 +17,7 @@ def main(session,cache):
     import matplotlib
     matplotlib.use('Agg')
     from matplotlib import pyplot as plt
+    from matplotlib.ticker import MaxNLocator
     from mirage import extract
     cache,session = Path(cache),Path(session)
     cache.mkdir(parents=True,exist_ok=True)
@@ -58,6 +59,9 @@ def main(session,cache):
     axes[1].set_title('Worming curves: qualitative only')
     for axis in axes:
         axis.set(xlabel='Easting (m)',ylabel='Northing (m)')
+        axis.xaxis.set_major_locator(MaxNLocator(4))
+        axis.yaxis.set_major_locator(MaxNLocator(4))
+        axis.ticklabel_format(style='sci',axis='both',scilimits=(0,0),useOffset=False)
     fig.suptitle('Geoscience Australia 2019 / Fatiando a Terra 2022, CC BY 4.0; no structural ground truth')
     fig.tight_layout()
     fig.savefig(output/'lightning-creek-overlay.png',dpi=160)
