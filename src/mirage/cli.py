@@ -44,9 +44,11 @@ def _build_parser():
     parser.add_argument("--recipe", type=Path, help="Selected adaptive recipe JSON; source identity is checked")
     parser.add_argument("--input-kind", choices=("unknown", "terrain", "magnetic", "gravity", "optical"), default="unknown")
     parser.add_argument("--auto", action="store_true", help="Analyze the raster and recommend settings")
+    parser.add_argument('--geophysics-profile', choices=('geophysics', 'legacy-v120'),
+                        help='Calibrated geophysics default, or unchanged v1.2 file processing; old recipes retain legacy unless explicitly overridden')
     parser.add_argument(
         "--gp-filters",
-        default="TDR,AS",
+        default=None,
         help="Comma-separated geophysics filters list (TDR, AS, VDR1, VDR2, THDR, none)",
     )
     parser.add_argument(
@@ -185,11 +187,12 @@ def main(argv=None):
             athr=params["ATHR"],
             dthr=params["DTHR"],
             extraction_mode=resolved_mode_val,
-            geophys_filters=(candidate["filter"] if recipe else args.gp_filters) if resolved_mode_val == "geophysics" else None,
+            geophys_filters=(candidate["filter"] if recipe else (args.gp_filters or ("TDR,AS" if args.geophysics_profile == "legacy-v120" else None))) if resolved_mode_val == "geophysics" else None,
             geophys_extract_type=(candidate["feature"] if recipe else args.gp_type) if resolved_mode_val == "geophysics" else "trough",
             geophys_stride=args.gp_stride if resolved_mode_val == "geophysics" else 1,
             rgb_conversion=args.rgb_conversion,
             adaptive_recipe=recipe,
+            geophysics_profile=args.geophysics_profile,
             profile=profile,
             compute_mode=args.compute,
         )

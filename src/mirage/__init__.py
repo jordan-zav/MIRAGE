@@ -1,7 +1,13 @@
-﻿"""Stable, lazy MIRAGE API. Importing this module performs no I/O."""
+"""Stable, lazy MIRAGE API. Importing this module performs no I/O."""
 from .version import __version__
 
-__all__ = ['__version__', 'extract', 'recommend', 'preview', 'routes', 'provenance']
+__all__ = ['__version__', 'extract', 'recommend', 'preview', 'routes', 'profiles', 'provenance']
+
+
+def profiles():
+    """Return calibrated and explicitly separated historical profiles."""
+    from ._profiles import profiles as available
+    return available()
 
 
 def routes():

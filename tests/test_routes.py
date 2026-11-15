@@ -77,6 +77,20 @@ def test_wavelet_contact_is_localized_and_invariant_to_field_datum():
         assert result.strength[10:-10, 60:67].max() > .9
 
 
+def test_scientific_profiles_keep_calibration_and_legacy_separate():
+    first = mirage.profiles()
+    assert first == mirage.profiles()
+    assert {'geophysics', 'legacy-array', 'legacy-v120'} == set(first)
+    image = np.tile(np.tanh((np.arange(128) - 63) / 3), (128, 1))
+    default = mirage.extract(image, pixel_size=50)
+    assert default.lines
+    assert all(row['method'] == first['geophysics']['method'] for row in default.attributes)
+    previous = mirage.extract(image, pixel_size=50, profile='legacy-array')
+    assert previous.lines and all(row['method'] == 'thdr' for row in previous.attributes)
+    with pytest.raises(ValueError, match='file pipeline'):
+        mirage.extract(image, profile='legacy-v120')
+
+
 def test_neural_requires_explicit_license_and_verified_external_hash(tmp_path):
     from mirage.neural import infer
     image = np.ones((32,32))

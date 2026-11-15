@@ -1,0 +1,17 @@
+{
+  "method": "worming",
+  "threshold": 0.5,
+  "scales_cells": [
+    1,
+    2,
+    4
+  ],
+  "heights_cells": [
+    0,
+    2,
+    4
+  ],
+  "validation_f1": 0.5538457920512622,
+  "bank_manifest_sha256": "beea91f002d146256491b3a0a280c66bb82fdcae5d8f630aed5495b93a4a0096",
+  "protocol": "PROTOCOLO_BANCOS_MEJORA_20261115.md"
+}

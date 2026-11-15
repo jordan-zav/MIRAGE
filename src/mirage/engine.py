@@ -105,10 +105,10 @@ def curves(mask, *, minimum_cells=4, gap_cells=3., angle=20.):
                          extraction_mode='geophysics')
 
 
-def extract(image, *, route='geomatic', method='thdr', pixel_size=1.,
-            transform=None, threshold=.2, minimum_cells=4, gap_cells=3.,
-            angle=20., scales=(1., 2., 4.), heights=(0., 2., 4.),
-            model=None, cancelled=None):
+def extract(image, *, route='geomatic', method=None, pixel_size=1.,
+            transform=None, threshold=None, minimum_cells=4, gap_cells=3.,
+            angle=20., scales=None, heights=None,
+            model=None, cancelled=None, profile='geophysics'):
     """Return Result. Scales/heights are map units; thresholds are normalized.
 
     Input must be a north-up square finite metric grid, with transform
@@ -116,6 +116,18 @@ def extract(image, *, route='geomatic', method='thdr', pixel_size=1.,
     No method determines the geological origin of a feature.
     """
     image = _grid(image, pixel_size)
+    if method is None and route == 'geomatic':
+        from ._profiles import settings
+        config = settings(profile, pixel_size)
+        method = config['method']
+        threshold = config['threshold'] if threshold is None else threshold
+        scales = config['scales'] if scales is None else scales
+        heights = config['heights'] if heights is None else heights
+    elif profile == 'legacy-v120':
+        raise ValueError('legacy-v120 is available through the file pipeline only.')
+    threshold = (.5 if route == 'neural' else .2) if threshold is None else threshold
+    scales = tuple(pixel_size * value for value in (1, 2, 4)) if scales is None else scales
+    heights = tuple(pixel_size * value for value in (0, 2, 4)) if heights is None else heights
     if route not in ('geomatic', 'neural') or not 0 <= threshold <= 1:
         raise ValueError('Unknown route or threshold outside [0,1].')
     if minimum_cells < 2 or gap_cells < 0 or not 0 <= angle <= 180:

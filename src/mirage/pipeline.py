@@ -78,7 +78,7 @@ def run_extraction_job(
     extraction_mode="signature", geophys_filters=None,
     geophys_extract_type="trough", geophys_stride=1, rgb_conversion="auto",
     workers=1, max_pixels=16_000_000, profile=None, compute_mode=None,
-    cancelled=None, adaptive_recipe=None,
+    cancelled=None, adaptive_recipe=None, geophysics_profile=None,
 ):
     if adaptive_recipe is not None:
         if __package__:
@@ -91,6 +91,9 @@ def run_extraction_job(
                 extraction_mode == "geophysics" and (geophys_filters != candidate["filter"] or geophys_extract_type != candidate["feature"])):
             raise ValueError("Recipe differs from execution parameters. Preview/select again.")
     metadata = inspect_raster(geotiff, max_pixels=max_pixels)
+    scientific_profile = geophysics_profile or ('legacy-v120' if adaptive_recipe or geophys_filters is not None else 'geophysics')
+    if scientific_profile not in ('geophysics', 'legacy-v120'):
+        raise ValueError('File geophysics profile must be geophysics or legacy-v120.')
     output = Path(out_dir)
     output.mkdir(parents=True, exist_ok=True)
     if any(output.iterdir()):
@@ -103,20 +106,26 @@ def run_extraction_job(
         json.dump(state, handle)
     try:
         out_base = output/'lineaments'
-        shapefile_path = lineament_extraction_multiband(
-            geotiff=geotiff, out_base=str(out_base), radi=radi, gthr=gthr,
-            lthr=lthr, fthr=fthr, athr=athr, dthr=dthr,
-            extraction_mode=extraction_mode, geophys_filters=geophys_filters,
-            geophys_extract_type=geophys_extract_type, geophys_stride=geophys_stride,
-            rgb_conversion=rgb_conversion, workers=workers, max_pixels=max_pixels,
-            cancelled=cancelled, minimum_length_m=(adaptive_recipe["requested_scale_m"]["minimum_length"] if adaptive_recipe else None),
-        )
+        if extraction_mode == 'geophysics' and scientific_profile == 'geophysics':
+            from ._profiles import extract_file
+            shapefile_path = extract_file(geotiff, out_base, cancelled=cancelled,
+                minimum_length_m=adaptive_recipe['requested_scale_m']['minimum_length'] if adaptive_recipe else None)
+        else:
+            shapefile_path = lineament_extraction_multiband(
+                geotiff=geotiff, out_base=str(out_base), radi=radi, gthr=gthr,
+                lthr=lthr, fthr=fthr, athr=athr, dthr=dthr,
+                extraction_mode=extraction_mode, geophys_filters=geophys_filters,
+                geophys_extract_type=geophys_extract_type, geophys_stride=geophys_stride,
+                rgb_conversion=rgb_conversion, workers=workers, max_pixels=max_pixels,
+                cancelled=cancelled, minimum_length_m=(adaptive_recipe["requested_scale_m"]["minimum_length"] if adaptive_recipe else None),
+            )
         report_path = output/'mirage_report.json'
         markdown_path = output/'mirage_report.md'
         summary = {
             "version": __version__, "input_raster": str(Path(geotiff)),
             "input_sha256": _sha256(geotiff), "raster": metadata,
             "adaptive_recipe": adaptive_recipe,
+            "geophysics_profile": scientific_profile if extraction_mode == 'geophysics' else None,
             "output_dir": str(output), "profile": profile, "compute_mode": compute_mode,
             "outputs": {"lineaments": shapefile_path,
                         "geopackage": str(out_base.with_suffix('.gpkg')),
@@ -130,6 +139,11 @@ def run_extraction_job(
                            "fthr_units": "source CRS map units"},
             "lineaments": _summarize_lineaments(shapefile_path),
         }
+        if extraction_mode == 'geophysics':
+            summary['legacy_controls_applied'] = scientific_profile == 'legacy-v120'
+            if scientific_profile == 'geophysics':
+                from ._profiles import profiles
+                summary['effective_geophysics'] = profiles()['geophysics']
         report_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False), encoding='utf-8')
         _write_markdown_report(markdown_path, summary)
         state.update(status='complete', finished_utc=datetime.now(timezone.utc).isoformat(),

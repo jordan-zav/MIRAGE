@@ -147,6 +147,9 @@ class MirageDock(QDockWidget):
         self.feature = QComboBox()
         self.feature.addItems(['trough', 'ridge'])
         parameters.addRow('Geophysical feature', self.feature)
+        self.geophysics_profile = QComboBox()
+        self.geophysics_profile.addItems(['Calibrated geophysics', 'Legacy v1.2 (numeric controls)'])
+        parameters.addRow('Geophysics profile', self.geophysics_profile)
         self.limit = QSpinBox()
         self.limit.setRange(9, 1000000000)
         self.limit.setValue(16000000)
@@ -284,6 +287,7 @@ class MirageDock(QDockWidget):
         return {'INPUT': layer, 'RECIPE': str(self.recipe_path) if not self.manual.isChecked() else None, 'MODE': self.mode.currentIndex(),
                 'OUTPUT': self.output.text().strip(), 'FILTER': self.filter.currentIndex(),
                 'FEATURE': self.feature.currentIndex(), 'MAX_PIXELS': self.limit.value(),
+                'GEOPHYSICS_PROFILE': self.geophysics_profile.currentIndex(),
                 **{key: spin.value() for key, spin in self.parameters.items()}}
 
     def start_extraction(self):

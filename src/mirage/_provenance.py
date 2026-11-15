@@ -14,7 +14,7 @@ def build_provenance():
         SOURCE_COMMIT, SOURCE_DIRTY = None, None
     files = {}
     for name in ('engine.py','line_core.py','adaptive.py','neural.py','outputs.py',
-                 'raster_backend.py','pipeline.py','config.py'):
+                 'raster_backend.py','pipeline.py','config.py','_profiles.py','geophysics_calibration.json'):
         source = Path(__file__).parent/name
         files[name] = hashlib.sha256(source.read_bytes()).hexdigest()
     try:

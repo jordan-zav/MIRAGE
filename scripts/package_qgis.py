@@ -21,6 +21,7 @@ def build(output):
     files['mirage_qgis/metadata.txt'] = (ROOT/'mirage_qgis/metadata.txt').read_bytes()
     files['mirage_qgis/icon.png'] = (ROOT/'assets/branding/logo_clean.png').read_bytes()
     core = ROOT/'src/mirage'
+    files['mirage_qgis/core/geophysics_calibration.json'] = (core/'geophysics_calibration.json').read_bytes()
     for source in core.rglob('*.py'):
         name = source.relative_to(core).as_posix()
         if name not in ('gui.py', 'cli.py', '__main__.py'):

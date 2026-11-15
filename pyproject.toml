@@ -32,7 +32,7 @@ where = ["src"]
 include = ["mirage", "mirage.*"]
 
 [tool.setuptools.package-data]
-mirage = ["assets/branding/*.png"]
+mirage = ["assets/branding/*.png", "geophysics_calibration.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

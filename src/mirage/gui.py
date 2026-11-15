@@ -129,7 +129,7 @@ UI_TEXT = {
         "metric_road": "Road evidence",
         "metric_lineation": "Lineation directionality",
         "metric_anomaly": "Anomaly salience",
-        "geophys_filters_label": "Geophys Filters (TDR, AS, VDR1, VDR2, THDR)",
+        "geophys_filters_label": "Legacy filters (blank uses calibrated profile)",
         "geophys_type_label": "Structure Type (trough / ridge)",
         "geophys_stride_label": "Curvature Stride (1=3x3, 2=5x5, 3=7x7)",
     },
@@ -229,7 +229,7 @@ UI_TEXT = {
         "metric_road": "Evidencia lineal antropogénica",
         "metric_lineation": "Direccionalidad de lineamientos",
         "metric_anomaly": "Saliencia de anomalía",
-        "geophys_filters_label": "Filtros Geofísicos (TDR, AS, VDR1, VDR2, THDR)",
+        "geophys_filters_label": "Filtros heredados (vacío usa perfil calibrado)",
         "geophys_type_label": "Tipo de Estructura (trough / ridge)",
         "geophys_stride_label": "Paso de Curvatura (1=3x3, 2=5x5, 3=7x7)",
     },
@@ -656,7 +656,6 @@ class LineamentGUI:
         
         ttk.Label(self.geophys_frame, text=self._t("geophys_filters_label"), style="Body.TLabel").grid(row=0, column=0, sticky="w", pady=4)
         self.geophys_filters_entry = ttk.Entry(self.geophys_frame)
-        self.geophys_filters_entry.insert(0, "TDR,AS")
         self.geophys_filters_entry.grid(row=0, column=1, sticky="ew", padx=8, pady=4)
         
         ttk.Label(self.geophys_frame, text=self._t("geophys_type_label"), style="Body.TLabel").grid(row=1, column=0, sticky="w", pady=4)
@@ -956,7 +955,7 @@ class LineamentGUI:
             try:
                 mode_key = self.feature_mode_var.get()
                 is_geophys = (mode_key == "Campos potenciales geofísicos" or mode_key == "Geophysics Potential Fields")
-                geophys_filters = self.geophys_filters_entry.get().strip() if is_geophys else None
+                geophys_filters = (self.geophys_filters_entry.get().strip() or None) if is_geophys else None
                 geophys_extract_type = self.geophys_type_box.get() if is_geophys else "trough"
                 try:
                     geophys_stride = int(self.geophys_stride_box.get()) if is_geophys else 1

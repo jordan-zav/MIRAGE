@@ -57,6 +57,8 @@ class ExtractSignatures(QgsProcessingAlgorithm):
             options=['TDR', 'AS', 'VDR1', 'VDR2', 'THDR', 'NONE'], defaultValue=0))
         self.addParameter(QgsProcessingParameterEnum('FEATURE', 'Geophysical feature',
             options=['trough', 'ridge'], defaultValue=0))
+        self.addParameter(QgsProcessingParameterEnum('GEOPHYSICS_PROFILE', 'Geophysics profile',
+            options=['Calibrated geophysics', 'Legacy v1.2 (numeric controls)'], defaultValue=0))
         self.addParameter(QgsProcessingParameterFolderDestination('OUTPUT', 'New output folder'))
         self.addOutput(QgsProcessingOutputVectorLayer('LINEAMENTS', 'MIRAGE lineaments'))
         self.addOutput(QgsProcessingOutputFile('REPORT', 'Run report'))
@@ -88,6 +90,7 @@ class ExtractSignatures(QgsProcessingAlgorithm):
                 out_dir=self.parameterAsString(parameters, 'OUTPUT', context),
                 extraction_mode=mode, geophys_filters=filter_name,
                 geophys_extract_type=feature, workers=1,
+                geophysics_profile='legacy-v120' if self.parameterAsEnum(parameters, 'GEOPHYSICS_PROFILE', context) else ('legacy-v120' if recipe else 'geophysics'),
                 max_pixels=self.parameterAsInt(parameters, 'MAX_PIXELS', context),
                 cancelled=feedback.isCanceled, adaptive_recipe=recipe, **arguments)
             feedback.setProgress(100)
