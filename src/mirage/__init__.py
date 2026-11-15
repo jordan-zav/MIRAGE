@@ -1,7 +1,7 @@
 ﻿"""Stable, lazy MIRAGE API. Importing this module performs no I/O."""
 from .version import __version__
 
-__all__ = ['__version__', 'extract', 'recommend', 'preview', 'routes']
+__all__ = ['__version__', 'extract', 'recommend', 'preview', 'routes', 'provenance']
 
 
 def routes():
@@ -26,4 +26,10 @@ def recommend(*args, **kwargs):
 def preview(*args, **kwargs):
     """Run the same extraction on an explicitly supplied preview array/window."""
     return extract(*args, **kwargs)
+
+
+def provenance():
+    """Return the installed version, build commit, dirty marker and source hashes."""
+    from ._provenance import build_provenance
+    return build_provenance()
 

@@ -24,4 +24,6 @@ neural/onnx is experimental. Install nn and explicitly select a model manifest. 
 
 ## Compatibility and development
 
+mirage.provenance() returns the engine-owned installed version, source commit, dirty-source marker, direct-install metadata and numerical source hashes. Hosts use this public function rather than importing private MIRAGE modules or assuming a source layout. A build outside Git may have a null commit; hashes still identify the numerical files. A dirty build must be reviewed by source hash as well as commit.
+
 The old source modules are compatibility imports into mirage. The standalone launcher continues using src/gui.py; the installed CLI is mirage or python -m mirage. The project's own QGIS plugin bundles byte-identical numerical modules under its established core namespace and excludes GUI/CLI modules. TerraWorkbench uses an installed distribution and never bundles this source.
