@@ -1,0 +1,140 @@
+{
+  "scientific_source_commit": "126ba1bfaf0941789c7088a9727ca55ecae4dec2",
+  "bank_manifest_sha256": "beea91f002d146256491b3a0a280c66bb82fdcae5d8f630aed5495b93a4a0096",
+  "frozen_parameters_sha256": "1ff0ec159b7b38f7643506cf0602a8579780321e78362460a9306b3529ae4464",
+  "evidence_files": {
+    "metrics/summary.json": "b5baa17e9501239a53fd25c0fe75a4ae3964a6c4d089d68ebcc978f0f5c2749d",
+    "metrics/paired-comparisons.json": "68e517958e01b6dd62c5b1e2bb1d1b05676681f360bfac53131bbb2947ec4473",
+    "real-metrics/comparison.json": "e9cae00d6b1af6c274322714eb70f834f3f4419d2059285e7fb06aca0cefb6dc",
+    "real-metrics/regions.json": "f1c92bdf617ca3dd39f5410939b2f9f497bfa239efec41b2f36f018e234b6261",
+    "real-metrics/blocks.json": "a8816fc13787467551205c802ae9530bf8c07a537dbc6f6a6adfd87c54a02d1f"
+  },
+  "models": [
+    {
+      "path": "teed-20261115.onnx",
+      "sha256": "a95dee65d4cb1c2f6f41e3fbc4386b9e6de21d765973008651877a4823432c0c",
+      "checkpoint_sha256": "a6aed74e9fd261dcf5bb8c8c64fca666b34d033a51f498ee5bebb99e2f8348e1",
+      "code_license": "MIT",
+      "weights_license": "MIT",
+      "weights_license_basis": "Repository-wide MIT at TEED pinned commit; no separately scoped checkpoint grant found",
+      "seed": 20261115,
+      "multiple": 8,
+      "input_scale": 255.0,
+      "mean": [
+        103.939,
+        116.779,
+        123.68
+      ],
+      "logits": false,
+      "onnx_max_abs_error": 1.9669532775878906e-06,
+      "parity_inputs": 5,
+      "selected_epoch": 315
+    },
+    {
+      "path": "teed-20261116.onnx",
+      "sha256": "54559f41085343828e3b8433a81e850f292f349cdcc8861f2628bd4d706f1b09",
+      "checkpoint_sha256": "984f4dc087c8aae54f45bfde4595e3f6e2f5097a7b455c72f9862d388727c80a",
+      "code_license": "MIT",
+      "weights_license": "MIT",
+      "weights_license_basis": "Repository-wide MIT at TEED pinned commit; no separately scoped checkpoint grant found",
+      "seed": 20261116,
+      "multiple": 8,
+      "input_scale": 255.0,
+      "mean": [
+        103.939,
+        116.779,
+        123.68
+      ],
+      "logits": false,
+      "onnx_max_abs_error": 1.6689300537109375e-06,
+      "parity_inputs": 5,
+      "selected_epoch": 314
+    },
+    {
+      "path": "teed-20261117.onnx",
+      "sha256": "df045432937a68a0f500a6d1de68b1014f03d7749c1ab17c2c3d1f9876781933",
+      "checkpoint_sha256": "459a0da1739bc67377db32e140b2943a99711ee5ba7a2071cc176e1e43f2fd32",
+      "code_license": "MIT",
+      "weights_license": "MIT",
+      "weights_license_basis": "Repository-wide MIT at TEED pinned commit; no separately scoped checkpoint grant found",
+      "seed": 20261117,
+      "multiple": 8,
+      "input_scale": 255.0,
+      "mean": [
+        103.939,
+        116.779,
+        123.68
+      ],
+      "logits": false,
+      "onnx_max_abs_error": 1.6689300537109375e-06,
+      "parity_inputs": 5,
+      "selected_epoch": 236
+    }
+  ],
+  "teed_sources": [
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "LICENSE",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/LICENSE",
+      "sha256": "b62889ee92d00f60fb54ccbbb3c9bb0a1cdbc10bbf779f0d715e53f9acc8733d",
+      "git_blob": "4a99ffdd7372b1bfa44ea302330343cb7370d0e9",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "README.md",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/README.md",
+      "sha256": "3560cd57c50e0a92317e35b7f196ccfa990c3c8404206958a97a42c10f1f8e64",
+      "git_blob": "e53c70cad88937d446c88669856a646ce3804fb2",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "ted.py",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/ted.py",
+      "sha256": "ded257568a4775ed08f741daa228c43f0c020f6f773a62744e7be64d8a719373",
+      "git_blob": "6f195868369159530627ab4ce12de72401835672",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "utils/AF/Fsmish.py",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/utils/AF/Fsmish.py",
+      "sha256": "e100aa88b3f84b036340c7f1b09e3a805712c6ac2688728758781e0c9acddc2d",
+      "git_blob": "eb8c55cad89953f202384eee81173e2b2ae10712",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "utils/AF/Xsmish.py",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/utils/AF/Xsmish.py",
+      "sha256": "b161f4644e682bda4cbc0985809a0f7c07ac48ae374c038358a74b7c76b2c45d",
+      "git_blob": "d2776c3e21b644ee76802223a6722e9fb6b24878",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "utils/img_processing.py",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/utils/img_processing.py",
+      "sha256": "86cc60183f30eda3f8c6191b75da70d2c8a39159d54156ed18fcce9b2f496522",
+      "git_blob": "b0fb0a68f1c8ce9806af5eae53b7e078b696be46",
+      "weight": false
+    },
+    {
+      "repository": "xavysp/TEED",
+      "commit": "40fa4b1391dc6424f88989d0ca75d5b592c8681d",
+      "file": "checkpoints/BIPED/7/7_model.pth",
+      "url": "https://raw.githubusercontent.com/xavysp/TEED/40fa4b1391dc6424f88989d0ca75d5b592c8681d/checkpoints/BIPED/7/7_model.pth",
+      "sha256": "d0109e7f40e7d9f1f495d34947eb08167e8fbb0a13b4e6ab3121261fb8d5a416",
+      "git_blob": "a0d63de61dc2ad93477d55523c12b093214b9ebb",
+      "weight": true
+    }
+  ],
+  "note": "Historical evidence only; no training or scientific evaluation was rerun for release preparation."
+}

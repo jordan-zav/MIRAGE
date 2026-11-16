@@ -34,7 +34,7 @@ def build(output):
         dirty = bool(subprocess.check_output(['git', '-C', str(ROOT), 'diff', '--name-only'], text=True).strip())
     except subprocess.CalledProcessError:
         commit, dirty = None, None
-    manifest = {'version': '1.3.0.dev0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
+    manifest = {'version': '1.3.0', 'source_commit': commit, 'tracked_changes_at_build': dirty,
                 'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())},
                 'core_source': 'src/mirage; the plugin contains byte-identical copies',
                 'scientific_validation': 'Software and synthetic checks do not establish field validity.'}

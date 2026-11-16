@@ -1,4 +1,4 @@
-# MIRAGE for QGIS 1.2.0
+# MIRAGE for QGIS 1.3.0
 
 **English** · [Español](README.es.md)
 
@@ -15,7 +15,7 @@ not an automatic geological or archaeological classification.
    needs internet and uses an isolated directory; QGIS' GIS libraries are retained.
 4. Restart QGIS if the library installation requests it.
 
-Requires QGIS 3.40–3.x and Python 3.10 or newer. Tested in QGIS 3.44.12 on Windows
+Requires QGIS 3.40–3.x and Python 3.11 or newer. Tested in QGIS 3.44.12 on Windows
 with Python 3.12. Host GDAL, NumPy, SciPy, Shapely and pyproj are used directly.
 The image stack uses scikit-image 0.25–0.26 and its missing dependencies.
 The first download may take several minutes. Normal extraction is local.
@@ -47,3 +47,7 @@ scale, CRS, roads, drainage and independent evidence before interpretation.
 LICENSE.txt is included in the ZIP. Jordan Zavaleta — [GisGeo Dev](https://gisgeo.dev).
 
 RADI is rounded to native pixels. Tonal edges retain a minimum sigma of 1.2 pixels and geophysics 0.5; requesting zero smoothing does not disable this numerical filter. The JSON records the parameter conversion.
+
+## 1.3.0 geophysics scope
+
+The new routes, banks and calibration concern geophysics only. The own QGIS file workflow defaults to calibrated worming; legacy-v120 remains selectable. Geological and archaeological modes retain v1.2.0 behavior and were not reevaluated. Experimental ONNX inference uses the separate Python array API and an external model manifest; no weights are included. Dependency placement uses MIRAGE_QGIS_DEPENDENCIES or the QGIS settings directory.

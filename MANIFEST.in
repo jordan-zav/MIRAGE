@@ -6,3 +6,7 @@ recursive-include docs *.md
 recursive-include mirage_qgis *.py *.txt *.md
 recursive-include assets/branding *.png
 global-exclude *.onnx *.pth *.pt *.ckpt *.pyc
+prune src/*.egg-info
+
+include CITATION.cff .zenodo.json CHANGELOG.md
+include docs/research/expected_hashes.json

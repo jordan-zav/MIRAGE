@@ -1,4 +1,4 @@
-# MIRAGE para QGIS 1.2.0
+# MIRAGE para QGIS 1.3.0
 
 [English](README.md) · **Español**
 
@@ -15,7 +15,7 @@ origen geológico o arqueológico de las formas.
    Requiere internet y utiliza una carpeta aislada sin sustituir la pila GIS de QGIS.
 4. Reinicia QGIS si la instalación lo solicita.
 
-Requiere QGIS 3.40–3.x y Python 3.10 o superior. Comprobado en QGIS 3.44.12 para
+Requiere QGIS 3.40–3.x y Python 3.11 o superior. Comprobado en QGIS 3.44.12 para
 Windows/Python 3.12. Utiliza GDAL, NumPy, SciPy, Shapely y pyproj del anfitrión;
 scikit-image 0.25–0.26 y las dependencias de imagen faltantes se instalan aparte.
 La primera descarga puede tardar varios minutos; la extracción normal es local.
@@ -47,3 +47,7 @@ drenaje y evidencia independiente antes de interpretar.
 incluye LICENSE.txt completo. Jordan Zavaleta — [GisGeo Dev](https://gisgeo.dev).
 
 RADI se redondea a pixeles nativos. El detector tonal conserva sigma minimo de 1,2 pixeles y geofisica de 0,5; solicitar cero suavizado no desactiva ese filtro numerico. El JSON registra la conversion a parametros.
+
+## Alcance geofisico de 1.3.0
+
+Las rutas nuevas, los bancos y la calibracion se aplican solo al modo geofisico. El flujo de archivos QGIS usa worming calibrado por defecto; legacy-v120 sigue seleccionable. Los modos geologico y arqueologico conservan el comportamiento de v1.2.0 y no se reevaluaron. La inferencia ONNX experimental usa la API Python de arrays y un manifiesto externo; no se incluyen pesos. Las dependencias usan MIRAGE_QGIS_DEPENDENCIES o el directorio de ajustes de QGIS.

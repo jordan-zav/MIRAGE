@@ -1,147 +1,110 @@
-<p align="center"><a href="README.md">English</a> · <strong>Español</strong></p>
+# MIRAGE 1.3.0
 
-# MIRAGE para QGIS
+[English](README.md) · [API](docs/API.md) · [Validación](docs/VALIDATION_1_3_0.md)
 
-**Extrae firmas de rásteres y revísalas en su contexto geoespacial.**
+MIRAGE extrae lineamientos ráster para revisión humana. QGIS es la interfaz principal; la distribución mirage-lineaments expone el paquete Python mirage y el CLI mirage. GPL-3.0-or-later, Jordan Zavaleta.
 
-La interfaz principal es ahora un panel de QGIS y herramientas de Processing.
-La API, CLI y GUI independiente conservan el mismo núcleo numérico.
+**Alcance de 1.3.0:** las rutas nuevas, los bancos y la calibración se aplican solo al modo geofísico (grillas magnéticas y gravimétricas). Los modos geológico y arqueológico conservan el comportamiento de v1.2.0 y no se reevaluaron. Ninguna ruta identifica el origen geológico de un rasgo; la textura o geometría circular tampoco demuestra arqueología.
 
-## Instalación y primer uso
+Esta versión está preparada localmente. La instalación desde v1.3.0 funcionará cuando el autor publique el tag y sus archivos.
 
-1. Descarga MIRAGE_QGIS_1.2.0.zip desde [Releases](https://github.com/jordan-zav/MIRAGE/releases/latest).
-2. En QGIS abre Complementos → Administrar e instalar complementos → Instalar a partir de ZIP.
-3. Selecciona el ZIP completo, activa MIRAGE y abre Ráster → MIRAGE.
-4. Si faltan bibliotecas de imagen, instálalas con el botón del panel. Requiere
-   internet y utiliza una carpeta separada sin sustituir las bibliotecas GIS del anfitrión.
-5. Carga un raster de archivo GDAL, declara el tipo de entrada e indica la escala en metros.
-6. Centra el mapa en una zona valida, pulsa Compare 3 previews y elige una variante.
-7. Selecciona una carpeta nueva o vacía y ejecuta Extract.
-8. El GeoPackage se carga en QGIS; contrástalo con el original y evidencia independiente.
+## Instalación
 
-Es la **edición experimental para QGIS**, comprobada en QGIS 3.44.12
-para Windows/Python 3.12. El ZIP admite QGIS 3.40–3.x; otras plataformas y
-versiones compatibles requieren comprobaciones propias. Publicarlo en GitHub
-no equivale a tener una ficha aprobada en el repositorio oficial QGIS.
+En QGIS, descarga MIRAGE_QGIS_1.3.0.zip del [release v1.3.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.3.0). Ve a Complementos → Administrar e instalar complementos → Instalar a partir de ZIP y abre el panel MIRAGE. Su instalador explícito de dependencias usa el directorio de ajustes de QGIS; MIRAGE_QGIS_DEPENDENCIES permite elegir otro. Conserva las bibliotecas GIS del anfitrión. Comprobado con QGIS 3.44.12 en Windows, fuera de pantalla.
 
-## Flujos disponibles
+Para Python 3.11 o 3.12, usa un entorno aislado y Git disponible:
 
-| Objetivo | Función |
-| --- | --- |
-| Firma geológica | Bordes multiescala, morfología, conexión y filtrado de curvas |
-| Geometría arqueológica | Parámetros que favorecen trazas angulares o cerradas |
-| Geofísica | TDR, señal analítica, derivadas verticales, THDR y crestas/valles por curvatura |
-| Recomendación | Parámetros iniciales heurísticos desde una muestra del ráster |
-| Revisión | Capas nativas, tarea en segundo plano y carga de GeoPackage |
-
-Los perfiles modifican parámetros: no determinan el origen de una forma. Las
-carreteras, drenaje, iluminación, costuras y ruido pueden parecer objetivos.
-Los puntajes del recomendador no son probabilidades calibradas ni un
-clasificador geológico entrenado.
-
-## Processing y automatización
-
-- mirage:extract_signatures: extracción, vectores e informes.
-- mirage:recommend_parameters: recomendación muestreada a JSON.
-- mirage:preview_candidates: tres variantes sobre la misma ventana nativa.
-
-Se pueden utilizar por lotes y desde modelos, con una salida propia por
-ejecución. El núcleo se ejecuta en serie dentro de una tarea QGIS. Cancel se
-atiende entre etapas numéricas, no interrumpe inmediatamente cada llamada de biblioteca.
-
-## Entradas, máscaras y coordenadas
-
-Se admiten monobanda, RGB y RGBA con CRS definido y transformación afín válida.
-Los servicios web deben exportarse primero a un ráster local adecuado.
-
-- Se excluyen NoData, no finitos y transparencia; sus vecindades de filtrado
-  se protegen y las líneas finales se recortan al dominio válido.
-- Geofísica exige malla completa, orientada al norte, de píxel cuadrado y CRS
-  proyectado en metros. Rellena huecos o reproyecta explícitamente antes.
-- La simplificación utiliza unidades del CRS. Con coordenadas geográficas el
-  panel fija FTHR en cero; utiliza cero o reproyecta para aplicar otra tolerancia.
-- El límite inicial es de 16 millones de píxeles. Ampliarlo requiere memoria;
-  no existe procesamiento completo fuera de memoria. Recorta entradas grandes.
-- Cero detecciones es un resultado válido: se genera una capa vacía con
-  informe completo, sin inventar lineamientos.
-
-## Salidas y trazabilidad
-
-| Archivo | Contenido |
-| --- | --- |
-| lineaments.gpkg | Capa que carga el panel |
-| lineaments.shp y auxiliares | Shapefile con atributos |
-| mirage_report.json | Parámetros, versión, CRS, hash de entrada y estadísticas |
-| mirage_report.md | Informe legible |
-| mirage_run.json | Estado de ejecución y finalización |
-
-No se sobrescriben resultados. Después de un fallo o cancelación conserva el
-manifiesto y elige una carpeta nueva. pix_len mide longitud en píxeles; map_len
-y chord utilizan unidades del CRS. Los resúmenes informan metros mediante
-conversión de unidades proyectadas o cálculo geodésico.
-
-## Dependencias e interfaz independiente
-
-QGIS utiliza GDAL/OGR, NumPy, SciPy, Shapely y pyproj propios; no necesita
-Rasterio ni Fiona. Las bibliotecas de imagen faltantes se instalan con una
-acción explícita. La extracción normal es local.
-
-Para ejecutar la fuente independiente usa Python 3.11 y un entorno aislado:
-
-~~~powershell
-python -m pip install -r requirements.txt
-python src/cli.py -i input.tif -o new_output --profile "Structural continuity" --fthr 0
-python src/gui.py
+~~~shell
+python -m venv .venv
+# Activa .venv en tu shell y ejecuta:
+pip install "mirage-lineaments @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
+pip install "mirage-lineaments[io,wavelets,nn] @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
+mirage --help
 ~~~
 
-La CLI admite varias entradas, umbrales, conversión RGB y recomendación opcional.
-El ejecutable de Windows de [v1.0.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.0.0)
-es un paquete histórico; no contiene las mejoras de 1.2.0.
+El segundo comando añade lectura/escritura ráster y vectorial independiente, PyWavelets y ONNX Runtime CPU. El extra gui añade dependencias de la interfaz Tk; dev añade herramientas de pruebas y construcción. Ningún extra incluye pesos ni PyTorch. Para desarrollo desde el código usa pip install -e ".[dev,wavelets,nn,io]".
 
-## Comprobaciones y desarrollo
+## Rutas y perfiles geofísicos
 
-~~~powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-python -m ruff check src tests mirage_qgis scripts
-python scripts/package_qgis.py --output /ruta/nueva/MIRAGE_QGIS_1.2.0.zip
+| Ruta/perfil | Comportamiento |
+| --- | --- |
+| A: geomatic | THDR, worming multinivel, wavelets y anisotropía del tensor; sin pesos neuronales |
+| geophysics (predeterminado) | Worming calibrado a 0,50; alturas 0/2/4 y escalas 1/2/4 veces el tamaño de celda |
+| legacy-v120 | Flujo histórico de archivos v1.2.0, mediante API, CLI y QGIS |
+| legacy-array | Valores anteriores de arrays, THDR a 0,20; distinto de la paridad del flujo de archivos |
+| B: neural/onnx | Inferencia experimental con modelo externo, manifiesto explícito y SHA-256 |
+
+mirage.profiles() expone la calibración del motor. Se pueden indicar método y umbral explícitos. Las recetas antiguas ligadas a una fuente conservan legacy-v120 salvo selección explícita. Consulta [perfiles científicos](docs/SCIENTIFIC_PROFILES.md).
+
+~~~python
+import numpy as np
+import mirage
+
+image = np.tile(np.tanh((np.arange(64) - 31) / 3), (64, 1))
+result = mirage.extract(image, pixel_size=25)
+result.write("new_lineaments.gpkg", "EPSG:32750")
+print(mirage.profiles(), mirage.provenance())
 ~~~
 
-El empaquetador utiliza una lista explícita, incluye licencia y manifiesto
-SHA-256 y copia el núcleo sin modificarlo. Excluye datos locales, credenciales,
-entornos y resultados. Las pruebas QGIS se ejecutan con su Python y plataforma
-Qt offscreen, sin controlar el escritorio.
+Las grillas geofísicas deben ser finitas, norte arriba, cuadradas y proyectadas en metros. Quien llama la API de arrays debe suministrar una transformación métrica correcta; los adaptadores de archivos/QGIS comprueban el CRS. Las escalas y alturas de continuación no estiman profundidades geológicas. El cálculo es global en memoria; no se certifica escalabilidad regional ni procesamiento fuera de memoria. Recorta deliberadamente los rásteres grandes. Las salidas conservan geometría, ruta/método, longitud, azimut, fuerza y escala/altura aplicables; worming guarda amplitud por vértice. La fuerza no es confianza geológica.
 
-[Validación](docs/VALIDATION_1_2_0.md) · [Flujo](docs/workflow.md) ·
-[Parámetros](docs/parameters.md) · [Informe histórico](docs/informe_mirage_paper.md).
+~~~shell
+mirage -i input.tif -o new_output --feature-mode "Geophysics Potential Fields" --input-kind magnetic --geophysics-profile geophysics
+mirage -i input.tif -o legacy_output --feature-mode "Geophysics Potential Fields" --input-kind magnetic --geophysics-profile legacy-v120
+~~~
 
-Las pruebas de software y sintéticas no demuestran validez de campo. Exactitud
-geológica, calidad de interpretación, escalabilidad y otras plataformas
-necesitan evaluación independiente.
+QGIS conserva la declaración de entrada, recomendaciones físicas, tres vistas previas de la misma ventana nativa, selección humana y recetas ligadas a la fuente. Consulta [flujo](docs/workflow.md) y [parámetros](docs/parameters.md).
 
-## Licencia y contacto
+## Resultados y límites
 
-[GNU GPL v3](LICENSE.txt). Jordan Zavaleta — [GisGeo Dev](https://gisgeo.dev) ·
-[jordanzav@gisgeo.dev](mailto:jordanzav@gisgeo.dev).
+El banco ampliado contiene 3.000 escenas Harmonica independientes de 128 × 128: 1.800 de entrenamiento, 600 de validación y 600 de prueba. La referencia es la traza superior proyectada de los cuerpos, con tolerancia principal de dos celdas. La calibración y selección del modelo usaron solo validación.
 
+| Método de prueba | Precisión | Cobertura | F1 | Error de posición (celdas) |
+| --- | ---: | ---: | ---: | ---: |
+| A worming | 0,509 | 0,719 | 0,564 | 1,898 |
+| A wavelets | 0,473 | 0,785 | 0,550 | 1,578 |
+| B TEED, semilla elegida en validación | 0,824 | 0,662 | 0,715 | 8,569 |
 
-## Configuracion adaptable en metros (1.2)
+B mejora F1 pero empeora la posición; las predicciones vacías reciben la penalización diagonal predefinida (16 escenas B frente a cero worming). Incumple el criterio conjunto de superioridad. La tabla no implica mayor cobertura sintética para B.
 
-1. Selecciona el tipo real de entrada: relieve, campo magnetico, gravedad, imagen optica o desconocido. La textura no establece su origen.
-2. Indica objetivo, longitud minima, radio de suavizado, distancia de enlace y simplificacion en metros. Este flujo requiere CRS proyectado en metros y pixeles cuadrados ortogonales. Para geofisica, ademas, malla orientada al norte y ventana sin huecos.
-3. Situa el centro del mapa sobre el area que quieras revisar y pulsa Compare 3 previews. Se procesan las mismas 256 por 256 celdas nativas con tres sensibilidades; las muestras reducidas de Recommend nunca cambian la resolucion usada para convertir metros a pixeles.
-4. Compara las superposiciones y parametros; elige Use balanced, conservative o detail. No se elige un ganador por numero de trazas. Se guardan el recorte, PNG, GeoPackage, candidatos y receta seleccionada en la ruta mostrada.
-5. Selecciona una carpeta nueva para la extraccion completa. La receta queda incluida en su informe JSON. Cambiar el raster o los ajustes anula la seleccion. Los limites del recorte pueden afectar el resultado; no se promete identidad entre recorte y extraccion regional.
+Pilbara, Mount Isa y Broken Hill comparan detecciones con magnetometría RTP y fallas/zonas de cizalla cartografiadas a 1:1.000.000 por Geoscience Australia (CC BY 4.0). Las regiones comparten compilación, procesamiento y escala cartográfica: no son fuentes de validación independientes entre sí. A 500 m B aumenta la cobertura de fallas cartografiadas (IC95 pareado de +4,79 a +9,32 puntos porcentuales) y también la densidad alejada (IC95 de +0,0037 a +0,0173 km/km²), por encima del margen permitido. B ofrece más cobertura cartográfica, pero peor posición sintética e incumple el criterio conjunto real. La concordancia cartográfica no es verdad geológica ni identifica origen. Consulta [resultados verificables](docs/VALIDATION_1_3_0.md) e [investigación](docs/research/README.md).
 
-Use manual advanced parameters conserva el flujo por pixeles y parametros expertos sin receta. Recommend solo prepara candidatos; no decide origen arqueologico ni cambia el tipo declarado. La entrada desconocida usa extraccion generica de bordes. Preserve geometry es una eleccion explicita del usuario.
+## Ruta B con tu propio modelo
 
-Processing: mirage:recommend_parameters genera el plan, mirage:preview_candidates compara una ventana (CENTER opcional en CRS fuente, WINDOW_PIXELS de 32 a 512), y mirage:extract_signatures admite RECIPE con un JSON seleccionado. La API compartida ofrece recommend_adaptive, select_recipe y validate_recipe; CLI acepta --recipe ruta.json. Cada receta esta ligada a ruta, tamano y fecha de la fuente; no se aplica automaticamente a otro archivo. El informe de extraccion calcula tambien SHA-256 de la entrada.
+Instala el extra nn. Obtén o entrena un modelo ONNX propio con permisos adecuados y coloca un manifiesto JSON junto a él. MIRAGE no descarga pesos al importar ni extraer. El modelo debe aceptar float32 NCHW, tres canales repetidos de gris normalizado, multiplicados por input_scale y con sustracción de mean por canal; devuelve un mapa de probabilidades, o logits si se declara. Se rellena por reflexión hasta multiple y se recorta la salida al tamaño de entrada. Valida ese preprocesamiento y el umbral para tu levantamiento.
 
-La longitud minima fisica se comprueba de nuevo en la geometria final, despues de simplificar y recortar mascaras. La resolucion puede impedir representar longitudes menores de dos pixeles. Las variantes alteran suavizado y umbral; mantienen longitud minima, enlace, simplificacion y objetivo. Los PNG muestran el raster original; las trazas TDR provienen del campo transformado. Ni las formas circulares ni un mayor numero de trazas demuestran origen o precision.
+~~~json
+{
+  "path": "my-model.onnx",
+  "sha256": "SUSTITUIR_POR_EL_SHA256_DE_64_CARACTERES_DEL_MODELO",
+  "code_license": "MIT",
+  "weights_license": "MIT",
+  "multiple": 8,
+  "input_scale": 255.0,
+  "mean": [103.939, 116.779, 123.68],
+  "logits": false
+}
+~~~
 
-RADI se redondea a pixeles nativos. El detector tonal conserva sigma minimo de 1,2 pixeles y geofisica de 0,5; solicitar cero suavizado no desactiva ese filtro numerico. El JSON registra la conversion a parametros.
+Las licencias deben reflejar permisos reales; no copies las etiquetas del ejemplo sin comprobarlos. Se admiten MIT, Apache-2.0 y BSD-3-Clause para código, y también CC0-1.0 para pesos. Calcula SHA-256 del binario exacto y sustituye el marcador. La ruta relativa del modelo se resuelve junto al manifiesto.
 
+~~~python
+result = mirage.extract(image, route="neural", method="onnx",
+                        model="my-model.json", pixel_size=25, threshold=0.5)
+result.write("new_neural_lineaments.gpkg", "EPSG:32750")
+~~~
 
-## API instalable de desarrollo
+Este ejemplo usa la API de arrays; el CLI histórico de archivos y el panel propio QGIS no exponen selección ONNX. No se distribuyen pesos. El código TEED es MIT, pero no se confirmó un permiso separado para su checkpoint original. La investigación anterior registró el MIT general del repositorio como base; eso no constituye una autorización independiente específica para pesos. Revisa los derechos antes de redistribuir modelos originales o derivados. [Reproducción y hashes](docs/research/REPRODUCING_MODELS.md).
 
-La rama local 1.3.0.dev0 añade la distribución mirage-lineaments y el espacio de nombres mirage. Consulte [API](docs/API.md) y [métodos y procedencia](docs/LINEAMENT_METHODS.md). Esta rama no es una publicación 1.3; la inferencia neuronal es experimental y no incluye pesos de modelos.
+## Cita y desarrollo
+
+Cita: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, versión 1.3.0. https://github.com/jordan-zav/MIRAGE. Metadatos en [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json). Aquí no se asignó DOI; incorpora el DOI real de Zenodo después del release.
+
+~~~shell
+python -m pytest
+python -m ruff check src tests mirage_qgis scripts setup.py
+python -m build
+python scripts/package_qgis.py --output MIRAGE_QGIS_1.3.0.zip
+~~~
+
+[Cambios](CHANGELOG.md) · [Borrador del release](docs/research/release_notes_1.3.0.md) · [Guía para publicar](docs/PUBLICAR_PYPI.es.md) · [GPL-3.0-or-later](LICENSE.txt).

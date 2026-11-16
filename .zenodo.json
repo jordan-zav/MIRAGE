@@ -1,0 +1,27 @@
+{
+  "title": "MIRAGE: reproducible raster lineament extraction",
+  "version": "1.3.0",
+  "upload_type": "software",
+  "description": "Raster lineament extraction with a QGIS interface, a Python API and experimental external ONNX geophysical inference. No geological origin identification.",
+  "creators": [
+    {
+      "name": "Zavaleta, Jordan"
+    }
+  ],
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "geophysics",
+    "lineaments",
+    "QGIS",
+    "raster",
+    "worming",
+    "ONNX"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/jordan-zav/MIRAGE",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}

@@ -1,9 +1,14 @@
-"""Embed the exact source revision in locally built wheels, without runtime Git."""
-from pathlib import Path
+"""Keep source provenance in wheels and generated egg-info out of sdists.
+
+The sdist retains root PKG-INFO and pyproject.toml. Setuptools regenerates its
+working metadata when a wheel is built from the source distribution.
+"""
+from pathlib import Path, PurePath
 import subprocess
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.sdist import sdist
 
 
 class BuildPy(build_py):
@@ -19,4 +24,11 @@ class BuildPy(build_py):
             f'SOURCE_COMMIT = {commit!r}\nSOURCE_DIRTY = {dirty!r}\n', encoding='utf-8')
 
 
-setup(cmdclass={'build_py': BuildPy})
+class SourceDistribution(sdist):
+    def make_release_tree(self, base_dir, files):
+        files = [name for name in files
+                 if not any(part.endswith('.egg-info') for part in PurePath(name).parts)]
+        super().make_release_tree(base_dir, files)
+
+
+setup(cmdclass={'build_py': BuildPy, 'sdist': SourceDistribution})

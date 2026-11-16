@@ -1,10 +1,10 @@
-# MIRAGE 1.3 development API
+# MIRAGE 1.3.0 API
 
 The distribution is mirage-lineaments; the import namespace is mirage. Python 3.11 and 3.12 are targets. The package import loads no raster, GUI, QGIS, neural runtime or weights. No route identifies the geological origin of a feature.
 
 ## Stable functions
 
-mirage.routes() returns the route/method registry without optional imports. mirage.extract(image, route='geomatic', method='thdr', pixel_size=1, transform=None, threshold=0.2, minimum_cells=4, gap_cells=3, angle=20, heights=(0,2,4), scales=(1,2,4), model=None, cancelled=None) returns a Result. mirage.preview has the same contract and processes exactly the array/window supplied by the caller; the caller must preserve its transform. Neither function silently resamples a grid.
+mirage.routes() returns the route/method registry without optional imports. mirage.extract(image, route='geomatic', method=None, pixel_size=1, transform=None, threshold=None, minimum_cells=4, gap_cells=3, angle=20, heights=None, scales=None, model=None, cancelled=None, profile='geophysics') returns a Result. mirage.preview has the same contract and processes exactly the array/window supplied by the caller; the caller must preserve its transform. Neither function silently resamples a grid.
 
 Input is a finite north-up square grid. Pixel size, heights, scales, coordinates and lengths are in metres. Rows increase southward. The transform is (pixel_size,0,xmin,0,-pixel_size,ymax), mapping pixel corners; returned curves pass through cell centres. Azimuth is clockwise from north modulo 180 degrees. Angles of degenerate/closed endpoint chords require interpretation; coherence near zero carries no reliable orientation.
 
@@ -29,3 +29,5 @@ neural/onnx is experimental. Install nn and explicitly select a model manifest. 
 mirage.provenance() returns the engine-owned installed version, source commit, dirty-source marker, direct-install metadata and numerical source hashes. Hosts use this public function rather than importing private MIRAGE modules or assuming a source layout. A build outside Git may have a null commit; hashes still identify the numerical files. A dirty build must be reviewed by source hash as well as commit.
 
 The old source modules are compatibility imports into mirage. The standalone launcher continues using src/gui.py; the installed CLI is mirage or python -m mirage. The project's own QGIS plugin bundles byte-identical numerical modules under its established core namespace and excludes GUI/CLI modules. TerraWorkbench uses an installed distribution and never bundles this source.
+
+The new routes, calibration and banks apply only to geophysics. Geological and archaeological file modes retain v1.2.0 behavior and were not reevaluated. See [profiles](SCIENTIFIC_PROFILES.md) for defaults and historical recipes.

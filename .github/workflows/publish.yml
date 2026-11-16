@@ -1,0 +1,66 @@
+name: Publish Python distributions
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.repository == 'jordan-zav/MIRAGE' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev,wavelets,nn,io]" twine
+      - name: Match tag and all version metadata
+        shell: python
+        run: |
+          import configparser, os, pathlib, tomllib
+          from mirage.version import __version__
+          version = tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version']
+          metadata = configparser.ConfigParser()
+          metadata.read('mirage_qgis/metadata.txt')
+          assert os.environ['GITHUB_REF_NAME'] == 'v' + version
+          assert version == __version__ == metadata['general']['version']
+      - run: python -m ruff check src tests mirage_qgis scripts setup.py
+      - run: python -m pytest
+      - run: python -m build
+      - run: python -m twine check --strict dist/*
+      - run: python scripts/check_distributions.py dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/*
+          if-no-files-found: error
+  testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/mirage-lineaments
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+  pypi:
+    needs: testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mirage-lineaments
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
