@@ -6,8 +6,6 @@ MIRAGE extracts raster lineaments for human review. QGIS is the primary interfac
 
 **Scope of 1.3.0:** the new routes, benchmarks and calibration apply only to geophysical mode (magnetic and gravity grids). Geological and archaeological modes retain v1.2.0 behavior and were not reevaluated. Neither route identifies the geological origin of a feature, and texture or circular geometry does not establish archaeology.
 
-This is a locally prepared release candidate. Installation from v1.3.0 will work after the author publishes that tag and its assets.
-
 ## Installation
 
 For QGIS, download MIRAGE_QGIS_1.3.0.zip from [release v1.3.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.3.0), then Plugins → Manage and Install Plugins → Install from ZIP. Open the MIRAGE panel. Its explicit dependency installer uses the QGIS settings directory; MIRAGE_QGIS_DEPENDENCIES can override that directory. It retains the host GIS libraries. Tested with QGIS 3.44.12 on Windows, offscreen.

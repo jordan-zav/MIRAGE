@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0 — prepared locally, not yet released
+## 1.3.0 — 2026-11-15
 
 - Installable mirage-geo distribution, lazy mirage API, CLI and optional io, wavelets, nn and gui extras; historical source import adapters retained.
 - Geophysics only: route A adds THDR, multilevel worming, continuous wavelets and tensor anisotropy. Route B supports explicit, hash-verified external ONNX models on CPU; no weights or automatic downloads.

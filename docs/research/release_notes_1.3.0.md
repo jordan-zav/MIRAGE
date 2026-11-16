@@ -1,6 +1,4 @@
-# MIRAGE 1.3.0 — draft release notes
-
-Author review required; this file does not publish a release.
+# MIRAGE 1.3.0 — release notes
 
 MIRAGE becomes installable as mirage-geo with the lazy mirage namespace, stable array API, provenance, CLI and separate optional dependencies. QGIS remains the primary interface.
 
@@ -10,4 +8,4 @@ Route B is experimental and requires an explicitly supplied, hash-verified exter
 
 The expanded synthetic bank comprises 3,000 scenes (600 held-out test), and the real bank comprises three Australian regions sharing Geoscience Australia data compilation and mapping scale. B improves synthetic F1 and real mapped coverage but worsens synthetic position and real unmatched density. It fails the joint criteria in both banks. These are not independent geological validations; neither route identifies geological origin.
 
-See [validation](../VALIDATION_1_3_0.md), [changelog](../../CHANGELOG.md) and [citation](../../CITATION.cff). Planned assets: MIRAGE_QGIS_1.3.0.zip, mirage_geo-1.3.0-py3-none-any.whl, mirage_geo-1.3.0.tar.gz and SHA256SUMS.txt. The author must review/merge, publish v1.3.0, attach verified assets, obtain the actual Zenodo DOI and configure Trusted Publishing before publication. No DOI is invented.
+See [validation](../VALIDATION_1_3_0.md), [changelog](../../CHANGELOG.md) and [citation](../../CITATION.cff). Assets: MIRAGE_QGIS_1.3.0.zip, mirage_geo-1.3.0-py3-none-any.whl, mirage_geo-1.3.0.tar.gz and SHA256SUMS.txt. Install with pip install mirage-geo.

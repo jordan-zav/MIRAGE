@@ -6,8 +6,6 @@ MIRAGE extrae lineamientos ráster para revisión humana. QGIS es la interfaz pr
 
 **Alcance de 1.3.0:** las rutas nuevas, los bancos y la calibración se aplican solo al modo geofísico (grillas magnéticas y gravimétricas). Los modos geológico y arqueológico conservan el comportamiento de v1.2.0 y no se reevaluaron. Ninguna ruta identifica el origen geológico de un rasgo; la textura o geometría circular tampoco demuestra arqueología.
 
-Esta versión está preparada localmente. La instalación desde v1.3.0 funcionará cuando el autor publique el tag y sus archivos.
-
 ## Instalación
 
 En QGIS, descarga MIRAGE_QGIS_1.3.0.zip del [release v1.3.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.3.0). Ve a Complementos → Administrar e instalar complementos → Instalar a partir de ZIP y abre el panel MIRAGE. Su instalador explícito de dependencias usa el directorio de ajustes de QGIS; MIRAGE_QGIS_DEPENDENCIES permite elegir otro. Conserva las bibliotecas GIS del anfitrión. Comprobado con QGIS 3.44.12 en Windows, fuera de pantalla.

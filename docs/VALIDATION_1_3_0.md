@@ -2,7 +2,7 @@
 
 ## Scope and evidence identity
 
-The new routes, banks and calibration apply only to geophysics. Geological and archaeological modes retain v1.2.0 behavior and were not reevaluated. The prepared local 1.3.0 release does not imply publication, field accuracy or geological origin identification.
+The new routes, banks and calibration apply only to geophysics. Geological and archaeological modes retain v1.2.0 behavior and were not reevaluated. The 1.3.0 release does not imply field accuracy or geological origin identification.
 
 Scientific source is commit 126ba1bfaf0941789c7088a9727ca55ecae4dec2. Expanded campaign results were already computed on 15 November 2026; release preparation only reads their records and hashes. It does not train, run scientific benchmarks again or change results. The earlier 96-scene exploratory study is separate and is not pooled into the 3,000-scene bank.
 
@@ -45,7 +45,7 @@ Fresh isolated Python 3.11 and 3.12 installations of the wheel with io/wavelets/
 
 Build provenance preserves the existing hook. A standard wheel built from the sdist outside Git may have a null source commit; its numerical source hashes remain available through mirage.provenance(). The QGIS ZIP records a clean source commit and a per-file SHA-256 manifest. Final artifact hashes and full execution logs belong to the release-preparation deliverable, rather than being embedded recursively into this document.
 
-The release-preparation deliverable supplies pytest XML/logs, Ruff, wheel/sdist build, strict Twine checks, artifact inventories with SHA-256, clean Python 3.11/3.12 API/CLI/pip-check runs and a QGIS 3.44.12 offscreen ZIP smoke. See its Spanish INFORME.md for executed outcomes and limitations. The CI matrix installs .[dev,wavelets,nn,io]; a bank-integrity audit is opt-in and does not generate or score scenes. The tag-only OIDC workflow is prepared locally; remote CI, PyPI configuration and publication are not executed or claimed.
+The release-preparation deliverable supplies pytest XML/logs, Ruff, wheel/sdist build, strict Twine checks, artifact inventories with SHA-256, clean Python 3.11/3.12 API/CLI/pip-check runs and a QGIS 3.44.12 offscreen ZIP smoke. See its Spanish INFORME.md for executed outcomes and limitations. The CI matrix installs .[dev,wavelets,nn,io]; a bank-integrity audit is opt-in and does not generate or score scenes. Publication to PyPI uses the tag-only OIDC workflow; the checks above are the local pre-release checks.
 
 Historical baseline: 74 tests in the initial packaging review; 76 tests in the expanded campaign, including the preexisting-bank hash audit. Those are historical counts, not a claim that this preparation reran those campaigns. API import laziness, metric transforms, calibrated/legacy profiles, wavelet regression, QGIS ZIP byte parity and portable dependency placement are covered by software checks.
 
