@@ -1,6 +1,8 @@
 """Scientific contracts and optional-engine safety of the common route API."""
 import hashlib
 import json
+import os
+from pathlib import Path
 import subprocess
 import sys
 
@@ -12,8 +14,13 @@ from mirage.engine import anisotropy, upward
 
 
 def test_lazy_namespace_has_no_gui_or_optional_runtime_side_effects():
+    # A source checkout is importable through pytest's pythonpath only; give the
+    # child interpreter the same package, whether or not MIRAGE is installed.
+    source = str(Path(mirage.__file__).resolve().parents[1])
+    environment = dict(os.environ, PYTHONPATH=os.pathsep.join(
+        filter(None, [source, os.environ.get('PYTHONPATH')])))
     subprocess.run([sys.executable,'-c',
-                    'import mirage,sys; assert not {"tkinter","qgis","torch","onnxruntime","numpy"}.intersection(sys.modules); assert "worming" in mirage.routes()["geomatic"]'],check=True)
+                    'import mirage,sys; assert not {"tkinter","qgis","torch","onnxruntime","numpy"}.intersection(sys.modules); assert "worming" in mirage.routes()["geomatic"]'],check=True,env=environment)
 
 
 def test_continuation_preserves_constant_and_reduces_roughness():
@@ -119,6 +126,32 @@ def test_common_geopackage_roundtrip_refuses_overwrite(tmp_path):
         assert 'height' in layer.schema['properties']
     with pytest.raises(FileExistsError):
         result.write(destination,'EPSG:32618')
+
+
+def test_neural_digest_comparison_ignores_letter_case(tmp_path):
+    from mirage.neural import infer
+    model = tmp_path/'untrusted.onnx'
+    model.write_bytes(b'not an ONNX graph')
+    digest = hashlib.sha256(model.read_bytes()).hexdigest().upper()
+    manifest = {'path':str(model),'sha256':digest,'code_license':'MIT','weights_license':'MIT'}
+    # Verification passes; the failure comes later, from the invalid graph or
+    # from a missing ONNX Runtime, never from the digest.
+    with pytest.raises(Exception) as caught:
+        infer(np.ones((32,32)),manifest)
+    assert 'SHA-256' not in str(caught.value)
+
+
+def test_rejected_write_does_not_block_the_corrected_retry(tmp_path):
+    pytest.importorskip('fiona')
+    image = np.tile(np.tanh((np.arange(64)-31)/3),(64,1))
+    result = mirage.extract(image,pixel_size=25)
+    destination = tmp_path/'lineaments.gpkg'
+    with pytest.raises(ValueError,match='CRS'):
+        result.write(destination,'NOT-A-CRS')
+    assert not list(tmp_path.iterdir())
+    result.write(destination,'EPSG:32618')
+    reservation = json.loads(destination.with_suffix('.mirage-reservation.json').read_text())
+    assert reservation['status'] == 'complete'
 
 
 def test_scene_partitions_and_file_hashes_are_disjoint():

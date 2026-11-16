@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- A GeoPackage write rejected before it starts (invalid CRS, missing io extra) no longer leaves a reservation that blocks the corrected retry; a write that fails midway is recorded as failed instead of writing.
+- The Markdown run report of the calibrated geophysics profile lists the method, threshold and continuation heights actually applied, and states that the numeric legacy controls were not used.
+- ONNX manifests accept an uppercase SHA-256, as printed by PowerShell Get-FileHash.
+- The CLI needs Rasterio only for --auto; a missing raster backend names the io extra. The QGIS build manifest takes its version from metadata.txt.
+- The lazy-import test runs from a source checkout without an installed distribution.
+
 ## 1.3.0 — 2026-11-15
 
 - Installable mirage-geo distribution, lazy mirage API, CLI and optional io, wavelets, nn and gui extras; historical source import adapters retained.

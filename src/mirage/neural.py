@@ -42,7 +42,8 @@ def infer(image, manifest):
     if config.get('code_license') not in ('MIT', 'Apache-2.0', 'BSD-3-Clause') or config.get('weights_license') not in ('MIT', 'Apache-2.0', 'BSD-3-Clause', 'CC0-1.0'):
         raise ValueError('Code and weights require separately recorded permissive licenses.')
     data = path.read_bytes()
-    if hashlib.sha256(data).hexdigest() != config['sha256']:
+    # PowerShell Get-FileHash prints uppercase digests.
+    if hashlib.sha256(data).hexdigest() != str(config['sha256']).strip().lower():
         raise ValueError('ONNX model SHA-256 mismatch.')
     import onnxruntime as ort
     options = ort.SessionOptions()

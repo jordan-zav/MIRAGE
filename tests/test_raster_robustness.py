@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -129,6 +130,31 @@ def test_manifest_and_report_include_finished_outputs_and_version(tmp_path):
     assert stored['profile'] == 'Synthetic check'
     assert len(stored['input_sha256']) == 64
     assert state['status'] == 'complete'
+
+
+def test_markdown_report_lists_only_the_controls_that_were_applied(tmp_path):
+    values = np.tile(np.tanh((np.arange(96)-47)/3), (96, 1)).astype('float32')
+    source = raster(tmp_path/'field.tif', values)
+    calibrated = run(source, tmp_path/'calibrated', extraction_mode='geophysics')
+    text = Path(calibrated['outputs']['report_markdown']).read_text(encoding='utf-8')
+    assert calibrated['legacy_controls_applied'] is False
+    assert 'Perfil Geofísico Calibrado' in text
+    assert '**Método:** '+calibrated['effective_geophysics']['method'] in text
+    assert 'Parámetros Utilizados' not in text and '(GTHR):' not in text
+    legacy = run(source, tmp_path/'legacy', extraction_mode='geophysics',
+                 geophysics_profile='legacy-v120', geophys_filters='TDR')
+    text = Path(legacy['outputs']['report_markdown']).read_text(encoding='utf-8')
+    assert legacy['legacy_controls_applied'] is True
+    assert 'Parámetros Utilizados' in text and '(GTHR):' in text
+    assert 'Perfil Geofísico Calibrado' not in text
+
+
+def test_missing_raster_backends_name_the_io_extra(tmp_path, monkeypatch):
+    from raster_backend import open_raster
+    monkeypatch.setitem(sys.modules, 'osgeo', None)
+    monkeypatch.setitem(sys.modules, 'rasterio', None)
+    with pytest.raises(ImportError, match=r'mirage-geo\[io\]'):
+        open_raster(tmp_path/'absent.tif')
 
 
 def test_cancellation_marks_run_without_publishing_outputs(tmp_path):

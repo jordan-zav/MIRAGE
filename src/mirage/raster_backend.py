@@ -112,7 +112,11 @@ def open_raster(path):
     try:
         from osgeo import gdal  # noqa: F401
     except ImportError:
-        import rasterio
+        try:
+            import rasterio
+        except ImportError as exc:
+            raise ImportError('Raster files need host GDAL (QGIS) or the io extra: '
+                              'pip install "mirage-geo[io]"') from exc
 
         return rasterio.open(path)
     return GDALSource(path)

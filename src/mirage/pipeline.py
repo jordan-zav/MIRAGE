@@ -38,7 +38,27 @@ def _write_markdown_report(report_path, summary):
 *   **Archivo Shapefile:** {summary["outputs"]["lineaments"]}
 *   **Archivo GeoPackage:** {summary["outputs"]["geopackage"]}
 *   **Sistema de Referencia (CRS) de la fuente:** {summary["lineaments"].get("crs", "N/A")}
-
+"""
+    effective = summary.get("effective_geophysics")
+    if effective:
+        # The calibrated profile ignores the numeric legacy controls; listing
+        # them as used would misreport how these lineaments were obtained.
+        md_content += f"""
+## Perfil Geofísico Calibrado
+*   **Modo Interpretativo:** {summary["parameters"]["extraction_mode"]}
+*   **Perfil:** {summary["geophysics_profile"]}
+*   **Método:** {effective["method"]}
+*   **Umbral Normalizado:** {effective["threshold"]}
+"""
+        if effective["method"] == "worming":
+            md_content += f"""*   **Alturas de Continuación (celdas):** {", ".join(str(value) for value in effective["heights_cells"])}\n"""
+        elif effective["method"] == "wavelets":
+            md_content += f"""*   **Escalas (celdas):** {", ".join(str(value) for value in effective["scales_cells"])}\n"""
+        md_content += """
+Los controles numéricos heredados (RADI, GTHR, LTHR, FTHR, ATHR, DTHR, filtros, tipo de estructura, paso de curvatura y conversión RGB) no se aplicaron en este perfil.
+"""
+    else:
+        md_content += f"""
 ## Parámetros Utilizados
 *   **Modo Interpretativo:** {summary["parameters"]["extraction_mode"]}
 *   **Radio de Suavizado (RADI):** {summary["parameters"]["radi"]}
@@ -48,14 +68,14 @@ def _write_markdown_report(report_path, summary):
 *   **Diferencia Angular Máxima (ATHR):** {summary["parameters"]["athr"]}°
 *   **Distancia de Enlace Máxima (DTHR):** {summary["parameters"]["dthr"]} px
 """
-    if summary["parameters"]["extraction_mode"] == "geophysics":
-        md_content += f"""*   **Filtros Geofísicos:** {summary["parameters"].get("geophys_filters", "")}
+        if summary["parameters"]["extraction_mode"] == "geophysics":
+            md_content += f"""*   **Filtros Geofísicos:** {summary["parameters"].get("geophys_filters", "")}
 *   **Tipo de Estructura:** {summary["parameters"].get("geophys_extract_type", "")}
 *   **Paso de Curvatura (Stride):** {summary["parameters"].get("geophys_stride", 1)}
 """
 
-    if "rgb_conversion" in summary["parameters"]:
-        md_content += f"""*   **Método de Conversión RGB:** {summary["parameters"]["rgb_conversion"]}\n"""
+        if "rgb_conversion" in summary["parameters"]:
+            md_content += f"""*   **Método de Conversión RGB:** {summary["parameters"]["rgb_conversion"]}\n"""
 
     md_content += f"""
 ## Resumen de Lineamientos
