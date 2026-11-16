@@ -94,11 +94,16 @@ def _read_analysis_sample(src, out_h, out_w):
 
 
 def _resolve_parameters(args, infile):
-    import rasterio
-    from rasterio.enums import ColorInterp
     validate_rgb_geotiff(infile)
     params = _preset_parameters(args.profile)
     if args.auto:
+        # Only the automatic recommendation resamples through Rasterio; the
+        # extraction itself also runs on host GDAL, without the io extra.
+        try:
+            import rasterio
+            from rasterio.enums import ColorInterp
+        except ImportError as exc:
+            raise SystemExit('--auto requires Rasterio: pip install "mirage-geo[io]"') from exc
         with rasterio.open(infile) as src:
             h, w = src.height, src.width
             scale = min(1.0, AUTO_READ_MAX_DIM / float(max(h, w)))
