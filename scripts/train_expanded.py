@@ -12,8 +12,9 @@ import torch
 from train_lineament_model import load_upstream, prepare
 
 
-def main(session, continuation=False):
+def main(session, source, upstream, continuation=False):
     session = Path(session)
+    source, upstream = Path(source), Path(upstream)
     bank = session / 'bank-complete'
     models = session / 'models'
     models.mkdir(exist_ok=True)
@@ -36,8 +37,6 @@ def main(session, continuation=False):
                 mask[:, [0, -1]] = False
                 masks.append(torch.from_numpy(mask.astype('float32')[None]))
         arrays[split] = tuple(torch.stack(values).to(device) for values in (images, truths, masks))
-    source = Path('O:/0. Projects/_references/TW-MIRAGE-lineamientos-20261115_104530/TEED')
-    upstream = Path('D:/DevResources/Sessions/TW-MIRAGE-lineamientos-20261115_104530/models/teed-pretrained.pth')
     summaries = []
     for seed in (20261115, 20261116, 20261117):
         torch.manual_seed(seed)
@@ -149,6 +148,10 @@ def export(model, inputs, destination, seed, record):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('session')
+    parser.add_argument('--teed-source', type=Path, required=True,
+                        help='TEED source checkout at the documented pinned commit')
+    parser.add_argument('--pretrained-weights', type=Path, required=True,
+                        help='Explicit externally obtained pretrained checkpoint')
     parser.add_argument('--continue-until-stable', action='store_true')
     args = parser.parse_args()
-    main(args.session, args.continue_until_stable)
+    main(args.session, args.teed_source, args.pretrained_weights, args.continue_until_stable)

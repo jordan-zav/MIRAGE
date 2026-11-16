@@ -20,10 +20,7 @@ def dependency_directory():
     override = os.environ.get('MIRAGE_QGIS_DEPENDENCIES')
     if override:
         return Path(override)
-    root = Path('D:/DevResources')
     version = f'py{sys.version_info.major}{sys.version_info.minor}'
-    if root.is_dir():
-        return root/'Shared'/'MIRAGE'/('qgis-'+version)
     from qgis.core import QgsApplication
     return Path(QgsApplication.qgisSettingsDirPath())/'python'/'mirage_dependencies'/version
 
@@ -37,12 +34,8 @@ def activate():
 
 
 def temporary_root():
-    root = Path('D:/DevResources')
-    if root.is_dir():
-        result = root/'Sessions'/'MIRAGE_QGIS'
-    else:
-        import tempfile
-        result = Path(tempfile.gettempdir())/'MIRAGE_QGIS'
+    import tempfile
+    result = Path(tempfile.gettempdir())/'MIRAGE_QGIS'
     result.mkdir(parents=True, exist_ok=True)
     return result
 
@@ -71,7 +64,7 @@ def installation_command():
         return None
     directory = dependency_directory()
     directory.mkdir(parents=True, exist_ok=True)
-    cache = Path('D:/DevResources/Shared/pip') if Path('D:/DevResources').is_dir() else directory.parent/'wheel-cache'
+    cache = directory.parent/'wheel-cache'
     arguments = ['-m', 'pip', 'install', '--disable-pip-version-check', '--no-deps', '--upgrade',
                  '--no-compile', '--only-binary=:all:', '--cache-dir', str(cache),
                  '--target', str(directory), *packages]
