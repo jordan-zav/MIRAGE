@@ -7,6 +7,10 @@
 - ONNX manifests accept an uppercase SHA-256, as printed by PowerShell Get-FileHash.
 - The CLI needs Rasterio only for --auto; a missing raster backend names the io extra. The QGIS build manifest takes its version from metadata.txt.
 - The lazy-import test runs from a source checkout without an installed distribution.
+- Wheels built from a source distribution, as python -m build does, now record their source commit: the sdist carries it, and the release inspection rejects a wheel without one. Wheels of 1.3.0 report no commit.
+- The mirage console command ends expected failures with a single error line and exit status 1 instead of a traceback; mirage.cli.main still raises for in-process callers.
+- Host GDAL 3.11 or later uses the MEM vector driver instead of the deprecated Memory driver.
+- Tests: an end-to-end run of the neural route against a small generated ONNX model (onnx joins the dev extra), agreement of every declared version number, and the console error path. CI also runs on Linux and Python 3.13.
 
 ## 1.3.0 — 2026-11-15
 

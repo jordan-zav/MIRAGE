@@ -21,6 +21,17 @@ def test_rejects_private_or_generated_archive_members(tmp_path, name):
         checker.inspect(artifact)
 
 
+def test_rejects_a_wheel_that_does_not_record_its_source_commit(tmp_path):
+    artifact = tmp_path/'candidate.whl'
+    with zipfile.ZipFile(artifact, 'w') as archive:
+        archive.writestr('mirage/_build_info.py', b"SOURCE_COMMIT = 'abc123'\nSOURCE_DIRTY = False\n")
+    assert checker.inspect(artifact)['files']
+    with zipfile.ZipFile(artifact, 'w') as archive:
+        archive.writestr('mirage/_build_info.py', b'SOURCE_COMMIT = None\nSOURCE_DIRTY = None\n')
+    with pytest.raises(AssertionError, match='_build_info'):
+        checker.inspect(artifact)
+
+
 def test_rejects_machine_path_but_accepts_text_ending_in_colon(tmp_path):
     artifact = tmp_path/'candidate.whl'
     with zipfile.ZipFile(artifact, 'w') as archive:

@@ -141,6 +141,40 @@ def test_neural_digest_comparison_ignores_letter_case(tmp_path):
     assert 'SHA-256' not in str(caught.value)
 
 
+def test_neural_route_runs_an_external_model_end_to_end(tmp_path):
+    onnx = pytest.importorskip('onnx')
+    pytest.importorskip('onnxruntime')
+    from onnx import TensorProto, helper
+    from mirage.neural import infer
+    # Channel mean followed by a sigmoid: small enough to state the expected
+    # output exactly, and it exercises scaling, mean subtraction, padding and crop.
+    graph = helper.make_graph(
+        [helper.make_node('ReduceMean', ['input'], ['mean'], axes=[1], keepdims=1),
+         helper.make_node('Sigmoid', ['mean'], ['probability'])], 'ridge',
+        [helper.make_tensor_value_info('input', TensorProto.FLOAT, [1, 3, 'rows', 'columns'])],
+        [helper.make_tensor_value_info('probability', TensorProto.FLOAT, [1, 1, 'rows', 'columns'])])
+    model = helper.make_model(graph, opset_imports=[helper.make_opsetid('', 13)])
+    model.ir_version = 8
+    onnx.checker.check_model(model)
+    (tmp_path/'ridge.onnx').write_bytes(model.SerializeToString())
+    digest = hashlib.sha256((tmp_path/'ridge.onnx').read_bytes()).hexdigest()
+    manifest = tmp_path/'ridge.json'
+    manifest.write_text(json.dumps({'path':'ridge.onnx','sha256':digest,'code_license':'MIT',
+                                    'weights_license':'CC0-1.0','multiple':8,'input_scale':12.,
+                                    'mean':[6.,6.,6.]}))
+    # 50 by 70 is not a multiple of 8, so the model sees a padded grid.
+    image = np.tile(np.exp(-((np.arange(70)-30)/2.)**2),(50,1))
+    probability = infer(image,manifest)
+    assert probability.shape == image.shape
+    np.testing.assert_allclose(probability,1/(1+np.exp(-(12*image-6))),atol=1e-5)
+    result = mirage.extract(image,route='neural',method='onnx',model=manifest,
+                            pixel_size=10.,threshold=.5)
+    np.testing.assert_allclose(result.strength,probability,atol=1e-6)
+    assert result.lines and all(row['route'] == 'neural' for row in result.attributes)
+    coordinates = np.concatenate([np.asarray(line.coords) for line in result.lines])
+    assert np.median(np.abs(coordinates[:,0]/10-30.5)) <= 1
+
+
 def test_rejected_write_does_not_block_the_corrected_retry(tmp_path):
     pytest.importorskip('fiona')
     image = np.tile(np.tanh((np.arange(64)-31)/3),(64,1))

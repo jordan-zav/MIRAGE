@@ -9,6 +9,8 @@ import zipfile
 
 import pytest
 
+import mirage
+
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('package_qgis', ROOT/'scripts/package_qgis.py')
 builder = importlib.util.module_from_spec(spec)
@@ -30,7 +32,7 @@ def test_qgis_archive_contains_identical_core_and_valid_manifest(tmp_path):
             assert archive.read('mirage_qgis/core/'+name) == (ROOT/'src/mirage'/name).read_bytes()
         metadata = configparser.ConfigParser()
         metadata.read_string(archive.read('mirage_qgis/metadata.txt').decode())
-        assert metadata['general']['version'] == manifest['version'] == '1.3.0'
+        assert metadata['general']['version'] == manifest['version'] == mirage.__version__
         assert metadata['general']['hasProcessingProvider'] == 'yes'
         assert archive.read('mirage_qgis/LICENSE.txt') == (ROOT/'LICENSE.txt').read_bytes()
 

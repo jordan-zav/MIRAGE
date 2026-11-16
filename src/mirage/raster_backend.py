@@ -172,7 +172,9 @@ def valid_region(mask, transform):
         memory.SetGeoTransform((transform.c, transform.a, transform.b, transform.f, transform.d, transform.e))
         band = memory.GetRasterBand(1)
         band.WriteArray(mask.astype('uint8'))
-        datasource = ogr.GetDriverByName('Memory').CreateDataSource('valid')
+        # GDAL 3.11 folded the vector Memory driver into MEM and deprecated the old name.
+        vector_memory = 'MEM' if int(gdal.VersionInfo('VERSION_NUM')) >= 3110000 else 'Memory'
+        datasource = ogr.GetDriverByName(vector_memory).CreateDataSource('valid')
         layer = datasource.CreateLayer('valid', geom_type=ogr.wkbPolygon)
         gdal.Polygonize(band, band, layer, -1, [], callback=None)
         polygons = [wkb.loads(bytes(feature.GetGeometryRef().ExportToWkb())) for feature in layer]
