@@ -1,6 +1,6 @@
 # MIRAGE 1.3.0 API
 
-The distribution is mirage-lineaments; the import namespace is mirage. Python 3.11 and 3.12 are targets. The package import loads no raster, GUI, QGIS, neural runtime or weights. No route identifies the geological origin of a feature.
+The distribution is mirage-geo; the import namespace is mirage. Python 3.11 and 3.12 are targets. The package import loads no raster, GUI, QGIS, neural runtime or weights. No route identifies the geological origin of a feature.
 
 ## Stable functions
 

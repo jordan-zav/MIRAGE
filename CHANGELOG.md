@@ -2,7 +2,7 @@
 
 ## 1.3.0 — prepared locally, not yet released
 
-- Installable mirage-lineaments distribution, lazy mirage API, CLI and optional io, wavelets, nn and gui extras; historical source import adapters retained.
+- Installable mirage-geo distribution, lazy mirage API, CLI and optional io, wavelets, nn and gui extras; historical source import adapters retained.
 - Geophysics only: route A adds THDR, multilevel worming, continuous wavelets and tensor anisotropy. Route B supports explicit, hash-verified external ONNX models on CPU; no weights or automatic downloads.
 - Calibrated geophysics defaults to worming at 0.50, selected on validation only. Explicit legacy-v120 preserves the historical file pipeline; legacy-array preserves THDR at 0.20. Existing source-bound recipes retain their execution contract.
 - Wavelet boundary reflection, datum removal and concave ridge checks correct edge artifacts. Regression tests are separate from scientific effectiveness.

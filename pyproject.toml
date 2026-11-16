@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mirage-lineaments"
+name = "mirage-geo"
 version = "1.3.0"
 description = "Reproducible raster lineament extraction without geological origin inference"
 readme = "README.md"

@@ -2,7 +2,7 @@
 
 [Español](README.es.md) · [API](docs/API.md) · [Validation](docs/VALIDATION_1_3_0.md)
 
-MIRAGE extracts raster lineaments for human review. QGIS is the primary interface; the mirage-lineaments distribution exposes the mirage Python package and mirage CLI. GPL-3.0-or-later, Jordan Zavaleta.
+MIRAGE extracts raster lineaments for human review. QGIS is the primary interface; the mirage-geo distribution exposes the mirage Python package and mirage CLI. GPL-3.0-or-later, Jordan Zavaleta.
 
 **Scope of 1.3.0:** the new routes, benchmarks and calibration apply only to geophysical mode (magnetic and gravity grids). Geological and archaeological modes retain v1.2.0 behavior and were not reevaluated. Neither route identifies the geological origin of a feature, and texture or circular geometry does not establish archaeology.
 
@@ -17,8 +17,8 @@ For Python 3.11 or 3.12, create an isolated environment with Git available:
 ~~~shell
 python -m venv .venv
 # Activate .venv using your shell, then:
-pip install "mirage-lineaments @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
-pip install "mirage-lineaments[io,wavelets,nn] @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
+pip install "mirage-geo @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
+pip install "mirage-geo[io,wavelets,nn] @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
 mirage --help
 ~~~
 

@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/mirage-lineaments
+      url: https://pypi.org/p/mirage-geo
     permissions:
       id-token: write
     steps:

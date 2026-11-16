@@ -18,13 +18,13 @@ def build_provenance():
         source = Path(__file__).parent/name
         files[name] = hashlib.sha256(source.read_bytes()).hexdigest()
     try:
-        direct = metadata.distribution('mirage-lineaments').read_text('direct_url.json')
+        direct = metadata.distribution('mirage-geo').read_text('direct_url.json')
         direct = json.loads(direct) if direct else None
     except metadata.PackageNotFoundError:
         direct = None
     if direct and direct.get('vcs_info',{}).get('commit_id'):
         SOURCE_COMMIT = direct['vcs_info']['commit_id']
-    return {'distribution':'mirage-lineaments','version':__version__,
+    return {'distribution':'mirage-geo','version':__version__,
             'commit':SOURCE_COMMIT,'source_dirty_at_build':SOURCE_DIRTY,
             'source_sha256':files,'direct_url':direct,
             'geological_origin_inference':False}

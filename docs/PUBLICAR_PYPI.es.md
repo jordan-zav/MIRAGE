@@ -1,10 +1,10 @@
 # Publicación por el autor
 
-Esta preparación es local. No se publicaron paquetes, tags ni releases. La distribución es mirage-lineaments y el paquete importable es mirage. Los pesos quedan fuera.
+Esta preparación es local. No se publicaron paquetes, tags ni releases. La distribución es mirage-geo y el paquete importable es mirage. Los pesos quedan fuera.
 
 1. Revisa la rama feature/paquete-y-rutas, el informe de validación, licencias y artefactos; aprueba e integra a main. Antes de publicar configura los pasos siguientes: el push del tag inicia automáticamente el workflow.
 2. En GitHub puedes configurar el entorno pypi restringido a tags v*. Si no existe, GitHub lo crea al primer uso.
-3. En tu cuenta PyPI existente registra un Trusted Publisher para el proyecto mirage-lineaments: propietario jordan-zav, repositorio MIRAGE, archivo publish.yml, entorno pypi. Si el proyecto todavía no existe, usa un publicador pendiente desde la configuración de la cuenta; no necesitas un token ni una subida inicial manual.
+3. En tu cuenta PyPI existente registra un Trusted Publisher para el proyecto mirage-geo: propietario jordan-zav, repositorio MIRAGE, archivo publish.yml, entorno pypi. Si el proyecto todavía no existe, usa un publicador pendiente desde la configuración de la cuenta; no necesitas un token ni una subida inicial manual.
 4. Por decisión del autor no se usa TestPyPI: la publicación va directamente a PyPI.
 5. Comprueba las versiones y crea/publica el tag inmutable v1.3.0 sobre el commit aprobado. El workflow publish.yml se dispara únicamente por push de tags v*, valida coincidencia de versión, Ruff, pytest, build, Twine y contenido. Conserva los logs del CI real; aquí solo se validó localmente.
 6. El workflow construye una vez y envía los mismos wheel/sdist directamente a PyPI mediante OIDC y permisos id-token: write solo en el job de publicación. No usa secretos de API. Si falla, corrige el problema sin sobrescribir versiones ya publicadas; no uses skip-existing para ocultarlo.

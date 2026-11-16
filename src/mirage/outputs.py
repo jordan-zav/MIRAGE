@@ -30,7 +30,7 @@ def write_result(result, destination, crs, *, raster=None, transform=None):
             import fiona
             from shapely.geometry import mapping
         except ImportError as exc:
-            raise RuntimeError('Install mirage-lineaments[io] outside QGIS.') from exc
+            raise RuntimeError('Install mirage-geo[io] outside QGIS.') from exc
         with fiona.open(destination, 'w', driver='GPKG', layer='lineaments',
                         crs=crs, schema={'geometry': 'LineString', 'properties': schema}) as layer:
             for line, record in zip(result.lines, result.attributes):
