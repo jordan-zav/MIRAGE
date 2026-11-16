@@ -10,13 +10,15 @@ MIRAGE extracts raster lineaments for human review. QGIS is the primary interfac
 
 For QGIS, download MIRAGE_QGIS_1.3.0.zip from [release v1.3.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.3.0), then Plugins → Manage and Install Plugins → Install from ZIP. Open the MIRAGE panel. Its explicit dependency installer uses the QGIS settings directory; MIRAGE_QGIS_DEPENDENCIES can override that directory. It retains the host GIS libraries. Tested with QGIS 3.44.12 on Windows, offscreen.
 
-For Python 3.11 or 3.12, create an isolated environment with Git available:
+For Python 3.11 or 3.12, create an isolated environment (Git is needed only for the tag install):
 
 ~~~shell
 python -m venv .venv
 # Activate .venv using your shell, then:
+pip install mirage-geo
+pip install "mirage-geo[io,wavelets,nn]"
+# or directly from the tag:
 pip install "mirage-geo @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
-pip install "mirage-geo[io,wavelets,nn] @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
 mirage --help
 ~~~
 

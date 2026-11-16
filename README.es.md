@@ -10,13 +10,15 @@ MIRAGE extrae lineamientos ráster para revisión humana. QGIS es la interfaz pr
 
 En QGIS, descarga MIRAGE_QGIS_1.3.0.zip del [release v1.3.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.3.0). Ve a Complementos → Administrar e instalar complementos → Instalar a partir de ZIP y abre el panel MIRAGE. Su instalador explícito de dependencias usa el directorio de ajustes de QGIS; MIRAGE_QGIS_DEPENDENCIES permite elegir otro. Conserva las bibliotecas GIS del anfitrión. Comprobado con QGIS 3.44.12 en Windows, fuera de pantalla.
 
-Para Python 3.11 o 3.12, usa un entorno aislado y Git disponible:
+Para Python 3.11 o 3.12, usa un entorno aislado (Git solo hace falta para instalar desde el tag):
 
 ~~~shell
 python -m venv .venv
 # Activa .venv en tu shell y ejecuta:
+pip install mirage-geo
+pip install "mirage-geo[io,wavelets,nn]"
+# o directamente desde el tag:
 pip install "mirage-geo @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
-pip install "mirage-geo[io,wavelets,nn] @ git+https://github.com/jordan-zav/MIRAGE@v1.3.0"
 mirage --help
 ~~~
 
