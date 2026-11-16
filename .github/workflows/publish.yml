@@ -34,24 +34,8 @@ jobs:
           name: python-distributions
           path: dist/*
           if-no-files-found: error
-  testpypi:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/mirage-lineaments
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: python-distributions
-          path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
   pypi:
-    needs: testpypi
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: pypi
