@@ -98,7 +98,7 @@ Este ejemplo usa la API de arrays; el CLI histórico de archivos y el panel prop
 
 ## Cita y desarrollo
 
-Cita: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, versión 1.3.0. https://github.com/jordan-zav/MIRAGE. Metadatos en [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json). Aquí no se asignó DOI; incorpora el DOI real de Zenodo después del release.
+Cita: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, versión 1.3.0. Zenodo. https://doi.org/10.5281/zenodo.24269846. Todas las versiones: https://doi.org/10.5281/zenodo.24269845. Metadatos en [CITATION.cff](CITATION.cff) y [.zenodo.json](.zenodo.json).
 
 ~~~shell
 python -m pytest
