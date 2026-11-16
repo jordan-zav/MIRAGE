@@ -33,6 +33,9 @@ def inspect(path):
         # Scan textual content; bitmap branding is allowed by the packaging allowlist.
         if posix.suffix.lower() not in {'.png', '.jpg', '.jpeg'}:
             assert not LOCAL_PATH.search(data), name
+        # A release must say which commit it was built from.
+        if posix.name == '_build_info.py':
+            assert b'SOURCE_COMMIT = None' not in data, name
     return dict(artifact=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                 files={name:hashlib.sha256(data).hexdigest() for name,data in sorted(files.items())})
 

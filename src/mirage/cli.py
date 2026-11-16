@@ -1,6 +1,7 @@
 import argparse
 import glob
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -212,5 +213,18 @@ def main(argv=None):
     return 0
 
 
+def console(argv=None):
+    """Console entry point: expected failures end with one line, not a traceback.
+
+    main() keeps raising, so callers that drive the CLI in process can still
+    handle the original exception.
+    """
+    try:
+        return main(argv)
+    except (ValueError, OSError, ImportError) as error:
+        print(f"mirage: error: {error}", file=sys.stderr)
+        return 1
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(console())
