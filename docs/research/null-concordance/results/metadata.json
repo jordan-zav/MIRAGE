@@ -1,0 +1,27 @@
+{
+  "input_sha256": {
+    "metrics/parameters-locked-before-test.json": "1ff0ec159b7b38f7643506cf0602a8579780321e78362460a9306b3529ae4464",
+    "real/provenance.json": "1cf44ef73db4b84bf23d9a205de5784909c4fcf77587a6155cc42aa15d37d102",
+    "models/teed-20261115.json": "491b714c6d5dcb0babe26f894c48e4ba24a2eb2fe8a90c833666f5aba4c4ee8c",
+    "models/teed-20261115.onnx": "a95dee65d4cb1c2f6f41e3fbc4386b9e6de21d765973008651877a4823432c0c",
+    "real-metrics/Pilbara-projected.npz": "2b44a9ab95ead637ca980ff271a3a441d901d3975df22c60a8d2c09d9ff59bf3",
+    "real/Pilbara-faults.geojson": "05cf686837c25c934f3cf306298b540d4aac1a6316c75644f02ca931b7b8e27a",
+    "real-metrics/Mount-Isa-projected.npz": "05827f353f9cf4d47dd8c7b23088d1235bab17b8618a03226e217404b42a8cd4",
+    "real/Mount-Isa-faults.geojson": "812dd44dcaab2a19c8eb826e2c13b47b869fb6f798b0e19081689975eb34ca4e",
+    "real-metrics/Broken-Hill-projected.npz": "d118bba2343d39f08493398bc12edb9aa7e966d3e05b593c43cd0e75783ac5f9",
+    "real/Broken-Hill-faults.geojson": "fb7a135ce5f0d921616d06f0c24ac40f90c7837b8669aab12a44e52ffbc56c00"
+  },
+  "null_seed": 20261116,
+  "realizations": 1000,
+  "min_retained": 0.6,
+  "sample_spacing_m": 50,
+  "area_quadrature_m": 100,
+  "tolerances_m": [
+    250,
+    500,
+    1000
+  ],
+  "diagnostic_only": "worming_020_diagnostic",
+  "interval": "observed minus null 97.5% and 2.5% quantiles; reference, not confidence",
+  "p_value": "(1 + count(null >= observed)) / 1001; unadjusted"
+}

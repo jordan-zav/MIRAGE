@@ -8,6 +8,7 @@ The new routes, calibration and banks concern geophysics only. Geological and ar
 - [Wavelet diagnosis](DIAGNOSTICO_WAVELETS_20261115.md).
 - [Model reproduction, budget and expected hashes](REPRODUCING_MODELS.md).
 - [Release 1.3.0 draft](release_notes_1.3.0.md).
+- [Chance level and structural null of the real concordance](null-concordance/INFORME.md) (Spanish, 2026-11-16), a later review that changes no published parameter.
 - [Validation summary](../VALIDATION_1_3_0.md), [scientific profiles](../SCIENTIFIC_PROFILES.md) and [method provenance](../LINEAMENT_METHODS.md).
 
 The protocol and amendments preserve their historical research decisions. Only an operational machine-specific location was generalized during release preparation; no frozen parameters or scientific results were changed.

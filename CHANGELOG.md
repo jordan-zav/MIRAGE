@@ -12,6 +12,8 @@
 - Host GDAL 3.11 or later uses the MEM vector driver instead of the deprecated Memory driver.
 - Tests: an end-to-end run of the neural route against a small generated ONNX model (onnx joins the dev extra), agreement of every declared version number, and the console error path. CI also runs on Linux and Python 3.13.
 
+- The public-region evaluation reports a chance level and a rigid-placement null. At 500 m, concordance with the 1:1M mapped faults does not exceed chance in Mount Isa or Broken Hill for worming or route B; Pilbara shows a nominal excess that does not survive Holm correction. The validation record states this and that the calibrated threshold, relative to the scene maximum, returns few lines on large regional grids.
+
 ## 1.3.0 — 2026-11-15
 
 - Installable mirage-geo distribution, lazy mirage API, CLI and optional io, wavelets, nn and gui extras; historical source import adapters retained.
