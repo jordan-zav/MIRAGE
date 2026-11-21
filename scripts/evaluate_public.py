@@ -39,6 +39,91 @@ def samples(lines, spacing=50):
     return np.array(points).reshape(-1, 2), np.array(angles), np.array(weights)
 
 
+def observed_mask(points, valid, transform):
+    """Membership in valid north-up square raster cells, without mutating inputs."""
+    dx, shear, xmin, shear_y, dy, ymax = transform
+    if dx <= 0 or dy >= 0 or shear or shear_y or not np.isclose(dx, -dy):
+        raise ValueError('Expected north-up square cells')
+    row = np.floor((points[:, 1] - ymax) / dy).astype(int)
+    col = np.floor((points[:, 0] - xmin) / dx).astype(int)
+    inside = (row >= 0) & (row < valid.shape[0]) & (col >= 0) & (col < valid.shape[1])
+    inside[inside] &= valid[row[inside], col[inside]]
+    return inside
+
+
+def chance_fractions(truth_points, valid, transform, tolerances=(250, 500, 1000)):
+    """Area quadrature at valid cell centers against 50 m fault samples."""
+    if not valid.any() or not len(truth_points):
+        raise ValueError('Observed area and fault samples must be nonempty')
+    dx, _, xmin, _, dy, ymax = transform
+    row, col = np.nonzero(valid)
+    centers = np.column_stack((xmin + (col + .5) * dx, ymax + (row + .5) * dy))
+    distances = cKDTree(truth_points).query(centers)[0]
+    return {t: float(np.mean(distances <= t)) for t in tolerances}
+
+
+def structural_null(points, weights, truth_points, valid, transform,
+                    tolerances=(250, 500, 1000), realizations=1000, seed=20261116,
+                    min_retained=.6, max_attempts=None):
+    """Rigidly rotate all samples and relocate their weighted center uniformly.
+
+    Rotation is uniform on [0, 2*pi); center is uniform over valid raster area.
+    Reject placements retaining less than min_retained of original length.
+    Score only retained length. No wrapping, rescaling or independent line moves.
+    The shifted-null interval is observed minus null quantiles, not a confidence
+    interval for field accuracy. Plus-one upper-tail p includes ties.
+    """
+    if realizations < 1000 or not .5 < min_retained <= 1:
+        raise ValueError('Require >=1000 realizations and majority retention')
+    if len(points) != len(weights) or np.any(weights <= 0):
+        raise ValueError('Positive sample lengths required')
+    if not valid.any() or not len(truth_points):
+        raise ValueError('Observed area and fault samples must be nonempty')
+    if not len(points):
+        return dict(summaries={t: dict(matched_fraction=None, null_mean=None,
+                    excess=None, excess_reference95=None, p_upper=None) for t in tolerances},
+                    fractions=np.empty((0, len(tolerances))), retained=np.array([]), attempts=0)
+    if not observed_mask(points, valid, transform).all():
+        raise ValueError('Input detection samples must lie in observed cells')
+    tree = cKDTree(truth_points)
+    tolerances = np.asarray(tolerances)
+    total = weights.sum()
+    matched = (weights[:, None] * (tree.query(points)[0][:, None] <= tolerances)).sum(axis=0) / total
+    centered = points - np.average(points, axis=0, weights=weights)
+    rows, cols = np.nonzero(valid)
+    dx, _, xmin, _, dy, ymax = transform
+    rng = np.random.default_rng(seed)
+    fractions, retained = [], []
+    attempts = 0
+    limit = max_attempts if max_attempts is not None else realizations * 1000
+    while len(fractions) < realizations and attempts < limit:
+        attempts += 1
+        angle = rng.uniform(0, 2 * np.pi)
+        rotation = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+        cell = rng.integers(len(rows))
+        center = [xmin + (cols[cell] + rng.random()) * dx,
+                  ymax + (rows[cell] + rng.random()) * dy]
+        moved = centered @ rotation.T + center
+        keep = observed_mask(moved, valid, transform)
+        length = weights[keep].sum()
+        if length < min_retained * total:
+            continue
+        distances = tree.query(moved[keep])[0]
+        fractions.append((weights[keep, None] * (distances[:, None] <= tolerances)).sum(axis=0) / length)
+        retained.append(float(length / total))
+    if len(fractions) < realizations:
+        raise RuntimeError(f'Only {len(fractions)} accepted placements in {attempts} attempts')
+    fractions = np.asarray(fractions)
+    summaries = {}
+    for i, tolerance in enumerate(tolerances):
+        null = fractions[:, i]
+        summaries[int(tolerance)] = dict(matched_fraction=float(matched[i]), null_mean=float(null.mean()),
+            excess=float(matched[i] - null.mean()),
+            excess_reference95=(matched[i] - np.quantile(null, [.975, .025])).tolist(),
+            p_upper=float((1 + np.count_nonzero(null >= matched[i])) / (realizations + 1)))
+    return dict(summaries=summaries, fractions=fractions, retained=np.asarray(retained), attempts=attempts)
+
+
 def run(session):
     session = Path(session)
     source = session / 'real'
@@ -98,6 +183,7 @@ def run(session):
         cellblocks = yy // 50 * ncols + xx // 50
         areas = np.bincount(cellblocks[valid], minlength=ncols * nrows) * .01
         tree_truth = cKDTree(truth_points)
+        chance = chance_fractions(truth_points, valid, tuple(affine)[:6])
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
         for ax, (method, config) in zip(axes.flat, methods.items()):
             result = extract(filled, pixel_size=100., transform=tuple(affine)[:6], threshold=config['threshold'],
@@ -105,6 +191,9 @@ def run(session):
             pred_points, pred_angles, pred_weights = samples(result.lines)
             keep = observed(pred_points)
             pred_points, pred_angles, pred_weights = pred_points[keep], pred_angles[keep], pred_weights[keep]
+            null = structural_null(pred_points, pred_weights, truth_points, valid, tuple(affine)[:6])
+            np.savez_compressed(destination / f'{name}-{method}-null.npz',
+                                fractions=null['fractions'], retained=null['retained'])
             pred_blocks = block_ids(pred_points)
             if len(pred_points):
                 td = cKDTree(pred_points).query(truth_points)[0]
@@ -127,7 +216,10 @@ def run(session):
                                      angle_sum=float((delta[near] * pred_weights[near]).sum())))
                 all_blocks.extend(rows)
                 summary = aggregate(rows)
-                results.append(dict(region=name, method=method, tolerance_m=tolerance, **summary))
+                results.append(dict(region=name, method=method, tolerance_m=tolerance, **summary,
+                                    chance_fraction=chance[tolerance], **null['summaries'][tolerance],
+                                    null_attempts=null['attempts'], null_seed=20261116,
+                                    null_realizations=1000, null_min_retained=.6))
             ax.imshow(image, extent=(xmin, xmin + width * 100, ymax - height * 100, ymax), cmap='gray',
                       vmin=np.nanpercentile(image, 2), vmax=np.nanpercentile(image, 98))
             for line in faults:

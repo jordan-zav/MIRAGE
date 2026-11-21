@@ -37,6 +37,25 @@ Pilbara, Mount Isa and Broken Hill share Geoscience Australia national RTP compi
 
 Paired mapped coverage gain CI95: [4.79, 9.32] percentage points. Unmatched density increase CI95: [0.0037, 0.0173] km/km², exceeding the 0.0016 margin. Angular deterioration upper bound: 3.24 degrees. B fails the combined real-concordance criterion. Greater coverage accompanies more unmatched detections, not demonstrated geological superiority. No route determines origin. Full 250/500/1000 m evidence hashes are in expected_hashes.json.
 
+## Chance level and structural null (later review)
+
+The concordance review adds a chance reference. At 500 m, 5.63% of the observed area of Pilbara, 28.66% of Mount Isa and 31.75% of Broken Hill lies near a mapped fault. These fractions are estimated at 100 m cell centres; they are not geological accuracy. The matched fraction is the share of detected length near mapped faults, distinct from the mapped-length coverage of the historical table.
+
+A null of 1,000 realizations per detection set (seed 20261116) applies one shared rotation and translation to all lines, requires at least 60% of the length to remain in valid cells and scores the retained part. At 500 m:
+
+| Region | Sealed method | Matched % | Null mean % | Excess pp | Reference interval 95% pp | One-sided p, unadjusted |
+| --- | --- | ---: | ---: | ---: | --- | ---: |
+| Pilbara | Worming 0.50 | 98.20 | 4.62 | +93.59 | [+17.71, +98.20] | 0.0110 |
+| Pilbara | B 20261115, 0.65 | 23.60 | 6.22 | +17.38 | [-4.86, +23.60] | 0.0490 |
+| Mount Isa | Worming 0.50 | 11.55 | 28.59 | -17.04 | [-56.90, +11.55] | 0.6983 |
+| Mount Isa | B 20261115, 0.65 | 38.82 | 30.35 | +8.46 | [-10.13, +25.06] | 0.1958 |
+| Broken Hill | Worming 0.50 | 39.47 | 32.34 | +7.14 | [-15.29, +27.67] | 0.2617 |
+| Broken Hill | B 20261115, 0.65 | 36.20 | 32.64 | +3.55 | [-10.92, +18.03] | 0.3087 |
+
+Excess is the observed matched fraction minus the null mean. The interval subtracts the null 97.5th and 2.5th percentiles from the observed value; it is a reference against the null, not a confidence interval for field accuracy. The p value counts ties and adds one: (1 + number of null realizations at least as high as observed) / 1001. Mount Isa and Broken Hill show no significant excess at 500 m. Pilbara shows a nominal excess, but sealed worming detects only 2.75 km and covers 1.58% of the reference. After Holm correction of the six sealed-method comparisons at 500 m, none rejects the null at 5% (smallest adjusted p 0.0659). Geological superiority is not demonstrated. Map scale, clipping and the placement mechanism limit interpretation. The [review report](research/null-concordance/INFORME.md) (Spanish) gives the 0.20 diagnostic, the 250/1,000 m tolerances, the methods and the input identities.
+
+The calibrated worming threshold of 0.50 is relative to the scene maximum. It was chosen on synthetic 128 by 128 scenes; on these large regional grids it returns very few lines: 0.00149, 0.02779 and 0.03955 km/km² in Pilbara, Mount Isa and Broken Hill. One dominant anomaly can suppress lower-amplitude structures. The 0.20 threshold was evaluated as a diagnostic only and does not replace the sealed value; adjusting the threshold or the area of interest requires independent evaluation.
+
 ## Software checks for this release preparation
 
 Local results on Windows: 86 pytest tests passed, with one opt-in scene-bank audit skipped in the normal suite. That audit was then run separately against the already generated 3,000-scene bank: 1 passed, checking partitions and every scene hash without generating or scoring scenes. Ruff passed, including setup.py and the new archive inspector. The wheel and sdist built successfully, strict Twine checks passed for both, and archive inspection found no weights, datasets, caches, machine paths, build directories or egg-info. The sdist retains root PKG-INFO and successfully rebuilds a wheel.
