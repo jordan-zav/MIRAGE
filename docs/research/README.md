@@ -7,7 +7,7 @@ The new routes, calibration and banks concern geophysics only. Geological and ar
 - [Frozen Australian regions](REGIONES_CONGELADAS_20261115.md) and [Pilbara amendment](ENMIENDA_PILBARA_20261115.md).
 - [Wavelet diagnosis](DIAGNOSTICO_WAVELETS_20261115.md).
 - [Model reproduction, budget and expected hashes](REPRODUCING_MODELS.md).
-- [Release 1.3.0 draft](release_notes_1.3.0.md).
+- [Release 1.4.0 notes](release_notes_1.4.0.md) and [release 1.3.0 notes](release_notes_1.3.0.md).
 - [Chance level and structural null of the real concordance](null-concordance/INFORME.md) (Spanish, 2026-11-16), a later review that changes no published parameter.
 - [Validation summary](../VALIDATION_1_3_0.md), [scientific profiles](../SCIENTIFIC_PROFILES.md) and [method provenance](../LINEAMENT_METHODS.md).
 

@@ -5,12 +5,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.24269845
     description: "Concept DOI (all versions)"
-  - type: doi
-    value: 10.5281/zenodo.24269846
-    description: "Version 1.3.0"
 type: software
 title: "MIRAGE: reproducible raster lineament extraction"
-version: 1.3.0
+version: 1.4.0
 authors:
   - family-names: Zavaleta
     given-names: Jordan
