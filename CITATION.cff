@@ -5,6 +5,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.24269845
     description: "Concept DOI (all versions)"
+  - type: doi
+    value: 10.5281/zenodo.24424877
+    description: "Version 1.4.0"
 type: software
 title: "MIRAGE: reproducible raster lineament extraction"
 version: 1.4.0
