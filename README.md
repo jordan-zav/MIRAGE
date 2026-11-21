@@ -98,7 +98,7 @@ This interface is the array API; the historical file CLI and own QGIS panel do n
 
 ## Citation and development
 
-Cite: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, version 1.4.0. Zenodo. https://doi.org/10.5281/zenodo.24269845 (all versions). [CITATION.cff](CITATION.cff) and [.zenodo.json](.zenodo.json) provide metadata.
+Cite: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, version 1.4.0. Zenodo. https://doi.org/10.5281/zenodo.24424877. All versions: https://doi.org/10.5281/zenodo.24269845. [CITATION.cff](CITATION.cff) and [.zenodo.json](.zenodo.json) provide metadata.
 
 ~~~shell
 python -m pytest
