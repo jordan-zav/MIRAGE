@@ -1,4 +1,4 @@
-# MIRAGE for QGIS 1.3.0
+# MIRAGE for QGIS 1.4.0
 
 **English** · [Español](README.es.md)
 

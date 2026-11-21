@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 — 2026-11-21
 
 - A GeoPackage write rejected before it starts (invalid CRS, missing io extra) no longer leaves a reservation that blocks the corrected retry; a write that fails midway is recorded as failed instead of writing.
 - The Markdown run report of the calibrated geophysics profile lists the method, threshold and continuation heights actually applied, and states that the numeric legacy controls were not used.
