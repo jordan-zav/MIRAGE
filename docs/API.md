@@ -1,4 +1,4 @@
-# MIRAGE 1.4.0 API
+# MIRAGE 1.4.1 API
 
 The distribution is mirage-geo; the import namespace is mirage. Python 3.11 and 3.12 are targets. The package import loads no raster, GUI, QGIS, neural runtime or weights. No route identifies the geological origin of a feature.
 

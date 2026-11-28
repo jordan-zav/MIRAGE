@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 — 2026-11-27
+
+- Improve FFT, binning and derivative-stencil performance while preserving extraction results.
+- Run QGIS recommendations asynchronously, restrict geophysics profiles to geophysical mode, clean up closed dialogs and ignore wheel events on unfocused numeric controls.
+- Resolve the optional Windows smoke-test font from the environment.
+
 ## 1.4.0 — 2026-11-21
 
 - A GeoPackage write rejected before it starts (invalid CRS, missing io extra) no longer leaves a reservation that blocks the corrected retry; a write that fails midway is recorded as failed instead of writing.
