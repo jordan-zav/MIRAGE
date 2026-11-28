@@ -10,7 +10,7 @@ else:
                                 open_raster, validate_geophysics_grid, write_vectors)
 
 from scipy.spatial import cKDTree
-from scipy.ndimage import gaussian_filter, convolve
+from scipy.ndimage import gaussian_filter
 from shapely.geometry import LineString
 from skimage import feature, filters, measure, morphology
 
@@ -20,11 +20,10 @@ def _remove_small_components(mask, min_size):
         return mask
 
     labels = measure.label(mask)
-    cleaned = mask.copy()
-    for region in measure.regionprops(labels):
-        if region.area < min_size:
-            cleaned[labels == region.label] = False
-    return cleaned
+    counts = np.bincount(labels.ravel())
+    keep = counts >= min_size
+    keep[0] = False
+    return keep[labels]
 
 
 # --- GEOPHYSICS PROCESSING SUITE (MADELINE LEE 2012 / EVANS 1979 / ROBERTS 2001) ---
@@ -73,71 +72,77 @@ def get_dilated_kernel(base_kernel, stride):
 
 def first_vertical_derivative(image, pixel_size=1.0):
     ny, nx = image.shape
-    ky = np.fft.fftfreq(ny, d=pixel_size) * 2.0 * np.pi
-    kx = np.fft.fftfreq(nx, d=pixel_size) * 2.0 * np.pi
-    KX, KY = np.meshgrid(kx, ky)
-    k = np.sqrt(KX**2 + KY**2)
-    
-    f_img = np.fft.fft2(image)
-    f_vdr1 = f_img * k
-    vdr1 = np.real(np.fft.ifft2(f_vdr1))
-    return vdr1
+    ky = np.fft.fftfreq(ny, d=pixel_size) * (2.0 * np.pi)
+    kx = np.fft.rfftfreq(nx, d=pixel_size) * (2.0 * np.pi)
+    k = np.sqrt(ky[:, None] ** 2 + kx[None, :] ** 2)
+
+    f_img = np.fft.rfft2(image)
+    return np.fft.irfft2(f_img * k, s=(ny, nx))
 
 
 def second_vertical_derivative(image, pixel_size=1.0):
     ny, nx = image.shape
-    ky = np.fft.fftfreq(ny, d=pixel_size) * 2.0 * np.pi
-    kx = np.fft.fftfreq(nx, d=pixel_size) * 2.0 * np.pi
-    KX, KY = np.meshgrid(kx, ky)
-    k2 = KX**2 + KY**2
-    
-    f_img = np.fft.fft2(image)
-    f_vdr2 = f_img * k2
-    vdr2 = np.real(np.fft.ifft2(f_vdr2))
-    return vdr2
+    ky = np.fft.fftfreq(ny, d=pixel_size) * (2.0 * np.pi)
+    kx = np.fft.rfftfreq(nx, d=pixel_size) * (2.0 * np.pi)
+    k2 = ky[:, None] ** 2 + kx[None, :] ** 2
+
+    f_img = np.fft.rfft2(image)
+    return np.fft.irfft2(f_img * k2, s=(ny, nx))
 
 
 def compute_potential_field_filter(image, filter_name, pixel_size=1.0):
     filter_name = str(filter_name).upper().strip()
     if filter_name == "NONE":
         return image
-    
-    gy, gx = np.gradient(image, pixel_size)
-    thdr = np.sqrt(gx**2 + gy**2)
-    
-    if filter_name == "THDR":
-        return thdr
-        
-    vdr1 = first_vertical_derivative(image, pixel_size)
     if filter_name == "VDR1":
-        return vdr1
-        
+        return first_vertical_derivative(image, pixel_size)
     if filter_name == "VDR2":
         return second_vertical_derivative(image, pixel_size)
-        
+    if filter_name not in ("THDR", "AS", "TDR"):
+        return image
+
+    gy, gx = np.gradient(image, pixel_size)
+    thdr = np.hypot(gx, gy)
+    if filter_name == "THDR":
+        return thdr
+
+    vdr1 = first_vertical_derivative(image, pixel_size)
     if filter_name == "AS":
-        return np.sqrt(thdr**2 + vdr1**2)
-        
-    if filter_name == "TDR":
-        return np.arctan2(vdr1, np.where(thdr < 1e-8, 1e-8, thdr))
-        
-    return image
+        return np.hypot(thdr, vdr1)
+    return np.arctan2(vdr1, np.where(thdr < 1e-8, 1e-8, thdr))
 
 
 def fit_quadratic_derivatives(image, pixel_size=1.0, stride=1):
-    L_eff = float(stride * pixel_size)
-    ka = get_dilated_kernel(K_A, stride) / (L_eff**2)
-    kb = get_dilated_kernel(K_B, stride) / (L_eff**2)
-    kc = get_dilated_kernel(K_C, stride) / (L_eff**2)
-    kd = get_dilated_kernel(K_D, stride) / L_eff
-    ke = get_dilated_kernel(K_E, stride) / L_eff
-    
-    a = convolve(image, ka, mode='nearest')
-    b = convolve(image, kb, mode='nearest')
-    c = convolve(image, kc, mode='nearest')
-    d = convolve(image, kd, mode='nearest')
-    e = convolve(image, ke, mode='nearest')
-    
+    s = max(1, int(stride))
+    L_eff = float(s * pixel_size)
+    L_eff2 = L_eff * L_eff
+    arr = np.asarray(image, dtype=float)
+    ny, nx = arr.shape
+    p = np.pad(arr, s, mode="edge")
+
+    tl = p[0:ny, 0:nx]
+    tc = p[0:ny, s:s + nx]
+    tr = p[0:ny, 2 * s:2 * s + nx]
+    ml = p[s:s + ny, 0:nx]
+    mc = p[s:s + ny, s:s + nx]
+    mr = p[s:s + ny, 2 * s:2 * s + nx]
+    bl = p[2 * s:2 * s + ny, 0:nx]
+    bc = p[2 * s:2 * s + ny, s:s + nx]
+    br = p[2 * s:2 * s + ny, 2 * s:2 * s + nx]
+
+    col_l = tl + ml + bl
+    col_c = tc + mc + bc
+    col_r = tr + mr + br
+    row_t = tl + tc + tr
+    row_m = ml + mc + mr
+    row_b = bl + bc + br
+
+    a = (col_l - 2.0 * col_c + col_r) / (6.0 * L_eff2)
+    b = (row_t - 2.0 * row_m + row_b) / (6.0 * L_eff2)
+    c = (-tl + tr + bl - br) / (4.0 * L_eff2)
+    d = (col_l - col_r) / (6.0 * L_eff)
+    e = (row_b - row_t) / (6.0 * L_eff)
+
     return a, b, c, d, e
 
 
@@ -303,6 +308,22 @@ def _build_edge_skeleton(image, radi, gthr):
 
 
 def _adjacency_from_coords(coords):
+    if np.issubdtype(coords.dtype, np.integer):
+        index = {(int(r), int(c)): i for i, (r, c) in enumerate(coords)}
+        adj = {}
+        for i, (r, c) in enumerate(coords):
+            ri, ci = int(r), int(c)
+            neigh = []
+            for dr in (-1, 0, 1):
+                for dc in (-1, 0, 1):
+                    if dr == 0 and dc == 0:
+                        continue
+                    j = index.get((ri + dr, ci + dc))
+                    if j is not None and j != i:
+                        neigh.append(j)
+            neigh.sort()
+            adj[i] = neigh
+        return adj
     pts = np.column_stack((coords[:, 1], coords[:, 0]))  # x, y
     tree = cKDTree(pts)
     neighbors = tree.query_ball_tree(tree, r=1.5)
@@ -682,13 +703,14 @@ def suppress_parallel_duplicates(lines, spacing, angle_threshold=12.0):
     tree = cKDTree(centroids)
     order = np.argsort(-lengths)
     kept = []
+    kept_set = set()
 
     for idx in order:
         candidate = lines[idx]
         cand_bounds = bounds[idx]
         duplicate = False
         for other_idx in tree.query_ball_point(centroids[idx], r=float(spacing) * 2.5):
-            if other_idx == idx or other_idx not in kept:
+            if other_idx == idx or other_idx not in kept_set:
                 continue
             if _angle_difference(angles[idx], angles[other_idx]) > angle_threshold:
                 continue
@@ -701,6 +723,7 @@ def suppress_parallel_duplicates(lines, spacing, angle_threshold=12.0):
 
         if not duplicate:
             kept.append(idx)
+            kept_set.add(idx)
 
     kept.sort()
     return [lines[idx] for idx in kept]

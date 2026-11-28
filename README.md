@@ -1,4 +1,4 @@
-# MIRAGE 1.4.0
+# MIRAGE 1.4.1
 
 [Español](README.es.md) · [API](docs/API.md) · [Validation](docs/VALIDATION_1_3_0.md)
 
@@ -8,7 +8,7 @@ MIRAGE extracts raster lineaments for human review. QGIS is the primary interfac
 
 ## Installation
 
-For QGIS, download MIRAGE_QGIS_1.4.0.zip from [release v1.4.0](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.4.0), then Plugins → Manage and Install Plugins → Install from ZIP. Open the MIRAGE panel. Its explicit dependency installer uses the QGIS settings directory; MIRAGE_QGIS_DEPENDENCIES can override that directory. It retains the host GIS libraries. Tested with QGIS 3.44.12 on Windows, offscreen.
+For QGIS, download MIRAGE_QGIS_1.4.1.zip from [release v1.4.1](https://github.com/jordan-zav/MIRAGE/releases/tag/v1.4.1), then Plugins → Manage and Install Plugins → Install from ZIP. Open the MIRAGE panel. Its explicit dependency installer uses the QGIS settings directory; MIRAGE_QGIS_DEPENDENCIES can override that directory. It retains the host GIS libraries. Tested with QGIS 3.44.12 on Windows, offscreen.
 
 For Python 3.11 or 3.12, create an isolated environment (Git is needed only for the tag install):
 
@@ -18,7 +18,7 @@ python -m venv .venv
 pip install mirage-geo
 pip install "mirage-geo[io,wavelets,nn]"
 # or directly from the tag:
-pip install "mirage-geo @ git+https://github.com/jordan-zav/MIRAGE@v1.4.0"
+pip install "mirage-geo @ git+https://github.com/jordan-zav/MIRAGE@v1.4.1"
 mirage --help
 ~~~
 
@@ -98,13 +98,13 @@ This interface is the array API; the historical file CLI and own QGIS panel do n
 
 ## Citation and development
 
-Cite: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, version 1.4.0. Zenodo. https://doi.org/10.5281/zenodo.24424877. All versions: https://doi.org/10.5281/zenodo.24269845. [CITATION.cff](CITATION.cff) and [.zenodo.json](.zenodo.json) provide metadata.
+Cite: Zavaleta, Jordan. MIRAGE: reproducible raster lineament extraction, version 1.4.1. Version DOI pending publication. All versions: https://doi.org/10.5281/zenodo.24269845. [CITATION.cff](CITATION.cff) and [.zenodo.json](.zenodo.json) provide metadata.
 
 ~~~shell
 python -m pytest
 python -m ruff check src tests mirage_qgis scripts setup.py
 python -m build
-python scripts/package_qgis.py --output MIRAGE_QGIS_1.4.0.zip
+python scripts/package_qgis.py --output MIRAGE_QGIS_1.4.1.zip
 ~~~
 
 [Changelog](CHANGELOG.md) · [Release notes](docs/research/release_notes_1.4.0.md) · [Author publishing guide (Spanish)](docs/PUBLICAR_PYPI.es.md) · [GPL-3.0-or-later](LICENSE.txt).

@@ -39,7 +39,7 @@ from qgis.core import QgsApplication, QgsGeometry, QgsProject, QgsRasterLayer, Q
 app = QgsApplication([], True)
 app.initQgis()
 from qgis.PyQt.QtGui import QFont, QFontDatabase
-font = Path('C:/Windows/Fonts/arial.ttf')
+font = Path(os.environ.get("WINDIR", "")) / "Fonts" / "arial.ttf"
 if font.is_file():
     QFontDatabase.addApplicationFont(str(font))
     app.setFont(QFont('Arial', 10))

@@ -25,7 +25,8 @@ def git_state():
         # An unpacked sdist inside some other repository must not adopt its commit.
         if Path(git('rev-parse', '--show-toplevel')).resolve() != ROOT:
             return None
-        return git('rev-parse', 'HEAD'), bool(git('status', '--porcelain'))
+        # Only tracked changes make a build dirty; build staging trees are untracked.
+        return git('rev-parse', 'HEAD'), bool(git('status', '--porcelain', '--untracked-files=no'))
     except (OSError, subprocess.CalledProcessError):
         return None
 
