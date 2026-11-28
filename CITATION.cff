@@ -11,7 +11,7 @@ identifiers:
 type: software
 title: "MIRAGE: reproducible raster lineament extraction"
 version: 1.4.1
-date-released: 2026-11-27
+date-released: 2026-11-28
 authors:
   - family-names: Zavaleta
     given-names: Jordan

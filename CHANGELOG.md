@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.1 — 2026-11-27
+## 1.4.1 — 2026-11-28
 
 - Improve FFT, binning and derivative-stencil performance while preserving extraction results.
 - Run QGIS recommendations asynchronously, restrict geophysics profiles to geophysical mode, clean up closed dialogs and ignore wheel events on unfocused numeric controls.
