@@ -1,6 +1,8 @@
 # Protocolo congelado MIRAGE bancos mejora
 
-Fecha: 15 de noviembre de 2026. Se registra antes de generar, entrenar o evaluar el banco nuevo. MIRAGE permanece local en feature/paquete-y-rutas. Ninguna prueba previa de 24 escenas se agrega a esta campaña. No se utiliza material NGEA, GX ni Oasis.
+Fecha: 15 de noviembre de 2026. Se registra antes de generar, entrenar o evaluar el banco nuevo. MIRAGE permanece local en feature/paquete-y-rutas. Ninguna prueba previa de 24 escenas se agrega a esta campaña. No se utiliza material privado de terceros.
+
+Enmienda editorial (28 de noviembre de 2026): se generalizó la redacción de la exclusión de material de terceros. El protocolo, sus datos y sus criterios no cambian.
 
 ## Banco sintético y particiones
 
