@@ -4,10 +4,10 @@ import json
 import uuid
 from pathlib import Path
 
-from qgis.PyQt.QtCore import QProcess, QProcessEnvironment, Qt
+from qgis.PyQt.QtCore import QEvent, QObject, QProcess, QProcessEnvironment, Qt
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (
-    QAction, QCheckBox, QComboBox, QDialog, QDockWidget, QDoubleSpinBox, QFileDialog, QFormLayout,
+    QAction, QApplication, QCheckBox, QComboBox, QDialog, QDockWidget, QDoubleSpinBox, QFileDialog, QFormLayout,
     QHBoxLayout, QLabel, QLineEdit, QProgressBar, QPushButton,
     QScrollArea, QSpinBox, QTextEdit, QVBoxLayout, QWidget,
 )
@@ -24,6 +24,22 @@ from .processing_provider import MirageProvider
 # QGIS tasks borrow their processing context. Keep it alive through C++ task
 # destruction, including when the dock/plugin is closed during processing.
 _TASK_RESOURCES = {}
+
+
+class _ScrollSafeFilter(QObject):
+    """Forward wheel events to the enclosing QScrollArea unless a spinbox is focused."""
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Wheel:
+            if isinstance(obj, (QDoubleSpinBox, QSpinBox)) and obj.hasFocus():
+                return False
+            parent = obj.parentWidget()
+            while parent is not None:
+                if isinstance(parent, QScrollArea):
+                    QApplication.sendEvent(parent.viewport(), event)
+                    return True
+                parent = parent.parentWidget()
+        return super().eventFilter(obj, event)
 
 
 class MirageFeedback(QgsProcessingFeedback):
@@ -189,17 +205,26 @@ class MirageDock(QDockWidget):
         self.preview.clicked.connect(self.start_preview)
         self.run = QPushButton('Extract')
         self.run.clicked.connect(self.start_extraction)
-        stop = QPushButton('Cancel')
-        stop.clicked.connect(self.cancel)
+        self.stop = QPushButton('Cancel')
+        self.stop.setEnabled(False)
+        self.stop.clicked.connect(self.cancel)
         buttons.addWidget(self.recommend)
         layout.addWidget(self.preview)
         buttons.addWidget(self.run)
-        buttons.addWidget(stop)
+        buttons.addWidget(self.stop)
         layout.addLayout(buttons)
         note = QLabel('Morphology is evidence to review, not a geological classification. Scores are heuristic.')
         note.setWordWrap(True)
         layout.addWidget(note)
         layout.addStretch()
+        self._scroll_filter = _ScrollSafeFilter(self)
+        for ctrl in (
+            self.kind, self.scale_goal, self.mode, self.profile,
+            self.filter, self.feature, self.geophysics_profile, self.limit,
+            *self.scales.values(), *self.parameters.values(),
+        ):
+            ctrl.setFocusPolicy(Qt.StrongFocus)
+            ctrl.installEventFilter(self._scroll_filter)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
@@ -228,6 +253,7 @@ class MirageDock(QDockWidget):
         geophysics = self.mode.currentIndex() == 2
         self.filter.setEnabled(geophysics)
         self.feature.setEnabled(geophysics)
+        self.geophysics_profile.setEnabled(geophysics)
 
     def apply_profile(self, name):
         from .core.config import PRESETS
@@ -308,6 +334,8 @@ class MirageDock(QDockWidget):
             self.run.setEnabled(False)
             self.recommend.setEnabled(False)
             self.preview.setEnabled(False)
+            self.stop.setEnabled(True)
+            self.progress.setValue(0)
             self.status.setText('Extracting signatures…')
             QgsApplication.taskManager().addTask(self.task)
         except Exception as error:
@@ -320,6 +348,7 @@ class MirageDock(QDockWidget):
         self.run.setEnabled(True)
         self.recommend.setEnabled(True)
         self.preview.setEnabled(True)
+        self.stop.setEnabled(False)
         if succeeded and result.get('LINEAMENTS'):
             layer = self.iface.addVectorLayer(result['LINEAMENTS']+'|layername=lineaments', 'MIRAGE signatures', 'ogr')
             if layer is not None and layer.isValid():
@@ -335,7 +364,7 @@ class MirageDock(QDockWidget):
             self.progress.setValue(int(value))
 
     def cancel(self):
-        if self.feedback:
+        if self.task is not None and self.feedback:
             self.feedback.cancel()
             self.status.setText('Cancellation requested; finishing the current numerical stage.')
 
@@ -359,16 +388,45 @@ class MirageDock(QDockWidget):
 
     def recommend_parameters(self):
         try:
-            from .adaptive_processing import RecommendParameters
+            if self.task is not None:
+                return
             root = temporary_root()/('adaptive_'+uuid.uuid4().hex)
             root.mkdir(parents=True)
-            context = QgsProcessingContext()
-            context.setProject(QgsProject.instance())
-            algorithm = RecommendParameters()
-            algorithm.initAlgorithm()
-            algorithm.processAlgorithm(dict(self.scale_options(), OUTPUT=str(root/'candidates.json')),
-                                       context, QgsProcessingFeedback())
-            plan = json.loads((root/'candidates.json').read_text(encoding='utf-8'))
+            parameters = dict(self.scale_options(), OUTPUT=str(root/'candidates.json'))
+            self.context = QgsProcessingContext()
+            self.context.setProject(QgsProject.instance())
+            self.feedback = MirageFeedback()
+            self.feedback.progressChanged.connect(self.update_progress)
+            algorithm = QgsApplication.processingRegistry().createAlgorithmById('mirage:recommend_parameters')
+            self.task = QgsProcessingAlgRunnerTask(algorithm, parameters, self.context, self.feedback)
+            token = id(self.task)
+            _TASK_RESOURCES[token] = (algorithm, self.context, self.feedback, self.task)
+            self.task.destroyed.connect(lambda *args, key=token: _TASK_RESOURCES.pop(key, None))
+            self.task.executed.connect(self.recommend_finished)
+            self.run.setEnabled(False)
+            self.preview.setEnabled(False)
+            self.recommend.setEnabled(False)
+            self.stop.setEnabled(True)
+            self.progress.setValue(0)
+            self.status.setText('Preparing three physical-scale candidates…')
+            QgsApplication.taskManager().addTask(self.task)
+        except Exception as error:
+            self.status.setText(str(error))
+
+    def recommend_finished(self, succeeded, result):
+        self.task = None
+        if self.closing:
+            return
+        self.run.setEnabled(True)
+        self.preview.setEnabled(True)
+        self.recommend.setEnabled(True)
+        self.stop.setEnabled(False)
+        if not succeeded or not result.get('OUTPUT'):
+            self.status.setText('Recommendation cancelled.' if self.feedback.isCanceled()
+                                else 'Recommendation failed: '+('; '.join(self.feedback.errors) or 'See Processing log.'))
+            return
+        try:
+            plan = json.loads(Path(result['OUTPUT']).read_text(encoding='utf-8'))
             self.status.setText('Three physical-scale candidates prepared. Compare previews to choose. '
                                 + ' '.join(plan['warnings']))
         except Exception as error:
@@ -405,6 +463,8 @@ class MirageDock(QDockWidget):
             self.run.setEnabled(False)
             self.preview.setEnabled(False)
             self.recommend.setEnabled(False)
+            self.stop.setEnabled(True)
+            self.progress.setValue(0)
             self.status.setText('Comparing three candidates at the map centre, at native resolution…')
             QgsApplication.taskManager().addTask(self.task)
         except Exception as error:
@@ -417,6 +477,7 @@ class MirageDock(QDockWidget):
         self.run.setEnabled(True)
         self.preview.setEnabled(True)
         self.recommend.setEnabled(True)
+        self.stop.setEnabled(False)
         if not succeeded or not result.get('PLAN'):
             self.status.setText('Preview cancelled.' if self.feedback.isCanceled() else 'Preview failed: '+('; '.join(self.feedback.errors) or 'See Processing log; choose a valid window.'))
             return
@@ -430,6 +491,7 @@ class MirageDock(QDockWidget):
         plan = json.loads(Path(path).read_text(encoding='utf-8'))
         root = Path(path).parent
         dialog = QDialog(self)
+        dialog.setAttribute(Qt.WA_DeleteOnClose)
         dialog.setWindowTitle('MIRAGE — same native window, three candidates')
         layout = QVBoxLayout(dialog)
         note = QLabel('Choose by comparison with independent evidence. More lines do not mean higher accuracy. '

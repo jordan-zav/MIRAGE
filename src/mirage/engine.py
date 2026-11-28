@@ -51,6 +51,8 @@ def upward(image, height, pixel_size=1.):
     image = _grid(image, pixel_size)
     if not np.isfinite(height) or height < 0:
         raise ValueError('Continuation height must be nonnegative and finite.')
+    if height == 0.0:
+        return image.copy()
     ny, nx = image.shape
     padded = np.pad(image, ((ny, ny), (nx, nx)), mode='reflect')
     ky = 2*np.pi*np.fft.fftfreq(3*ny, pixel_size)
@@ -153,12 +155,28 @@ def extract(image, *, route='geomatic', method=None, pixel_size=1.,
         mask = _build_geophysics_skeleton(strength, 1, 100*threshold, 'TDR', 'ridge', 1, pixel_size)
         layers.append((strength, mask, None, None))
     elif method in ('thdr', 'worming'):
-        for height in heights if method == 'worming' else (0.,):
-            field = upward(image, float(height), pixel_size)
+        target_heights = [float(h) for h in (heights if method == 'worming' else (0.,))]
+        for h in target_heights:
+            if not np.isfinite(h) or h < 0:
+                raise ValueError('Continuation height must be nonnegative and finite.')
+        ny, nx = image.shape
+        needs_fft = any(h > 0.0 for h in target_heights)
+        if needs_fft:
+            padded = np.pad(image, ((ny, ny), (nx, nx)), mode='reflect')
+            f_padded = np.fft.rfft2(padded)
+            ky = 2*np.pi*np.fft.fftfreq(3*ny, pixel_size)
+            kx = 2*np.pi*np.fft.rfftfreq(3*nx, pixel_size)
+            k_radial = np.hypot(ky[:, None], kx[None, :])
+            padded_shape = padded.shape
+        for height in target_heights:
+            if height == 0.0:
+                field = image
+            else:
+                field = np.fft.irfft2(f_padded*np.exp(-height*k_radial), s=padded_shape)[ny:2*ny, nx:2*nx]
             gy, gx = np.gradient(field, pixel_size)
             amplitude = np.hypot(gx, gy)
             strength = _normalize_image(amplitude)
-            layers.append((strength, _ridges(strength, threshold), None, float(height), amplitude))
+            layers.append((strength, _ridges(strength, threshold), None, height, amplitude))
     elif method == 'wavelets':
         import pywt
         for scale in scales:

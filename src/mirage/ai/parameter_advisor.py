@@ -368,7 +368,7 @@ def _lineation_directionality(edges):
     return float(np.clip((dominance - (1.0 / bins)) / (1.0 - (1.0 / bins) + 1e-6), 0.0, 1.0))
 
 
-def _orientation_coherence_from_gradients(gx, gy):
+def _orientation_coherence_from_gradients(gx, gy, mag=None):
     """
     0 -> isotropic orientations, 1 -> strong preferred orientations.
     """
@@ -377,7 +377,8 @@ def _orientation_coherence_from_gradients(gx, gy):
 
     gx = np.asarray(gx, dtype=np.float32)
     gy = np.asarray(gy, dtype=np.float32)
-    mag = np.hypot(gx, gy)
+    if mag is None:
+        mag = np.hypot(gx, gy)
     if not np.any(np.isfinite(mag)):
         return 0.0
 
@@ -415,12 +416,11 @@ def _analyze_raster_cpu(image, rgb=None):
     circle_evidence = _circular_evidence(edges)
     road_evidence = _road_evidence(edges)
     lineation_directionality = _lineation_directionality(edges)
-    anomaly_salience = float(np.percentile(grad, 99) - np.percentile(grad, 60))
-    orientation_coherence = _orientation_coherence_from_gradients(gx, gy)
+    g_med, g_p60, g_p90, g_p99 = np.percentile(grad, [50, 60, 90, 99])
+    anomaly_salience = float(g_p99 - g_p60)
+    orientation_coherence = _orientation_coherence_from_gradients(gx, gy, mag=grad)
     optical = _rgb_optical_metrics(rgb)
 
-    g_med = np.median(grad)
-    g_p90 = np.percentile(grad, 90)
     g_std = np.std(grad)
     contrast = float(g_p90 / (g_med + 1e-6))
 
@@ -428,7 +428,8 @@ def _analyze_raster_cpu(image, rgb=None):
     step_x = max(1, image.shape[1] // 256)
     sample = image[::step_y, ::step_x]
     unique_ratio = np.unique(np.round(sample, 3)).size / max(sample.size, 1)
-    dynamic_range = float(np.percentile(image, 98) - np.percentile(image, 2))
+    im_p2, im_p98 = np.percentile(image, [2, 98])
+    dynamic_range = float(im_p98 - im_p2)
 
     return {
         "contrast": float(contrast),
